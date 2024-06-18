@@ -5,7 +5,7 @@ from tg_bot_for_bank.filters.NameFilter import IsFIO
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state, StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard
+from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
 from tg_bot_for_bank.sender import send_to_admin
 
 router = Router()
@@ -21,9 +21,9 @@ async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
         text="Приветствую.\n"
-             "Введите своё ФИО и ожидайте одобрения администратором.\n\n"
-             "(Ввод в формате: Иванов Иван Иванович).",
-        reply_markup=ReplyKeyboardRemove()
+             "Для продолжения предоставьте свой номер телефона.",
+        reply_markup=await contact_keyboard(),
+        request_contact=True
     )
     await state.set_state(EntryState.name_entry)
     # await state.set_state(None) с сохранением
@@ -31,7 +31,8 @@ async def cmd_start(message: Message, state: FSMContext):
 
 @router.message(
     EntryState.name_entry,
-    IsFIO(is_fio=True)
+    F.contact,
+    #IsFIO(is_fio=True)
 )
 async def name_entry(message: Message, state: FSMContext):
     await state.clear()
@@ -43,7 +44,8 @@ async def name_entry(message: Message, state: FSMContext):
         )
     )
     await state.update_data(
-        name=message.text
+        name=message.text,
+        contact=message.contact
     )
     await state.set_state(EntryState.name_success)
 
@@ -61,7 +63,6 @@ async def name_entry_success(message: Message, state: FSMContext):
     user_data = await state.get_data()
     await send_to_admin(user_data)
     print(user_data)
-    print(message.contact)
 
     await state.clear()
 
@@ -73,11 +74,10 @@ async def name_entry_success(message: Message, state: FSMContext):
 async def name_entry_not_success(message: Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        text="Повторите ввод ФИО.\n"
-             "(Ввод в формате: Иванов Иван Иванович).",
+        text="Обратитесь к администратору.",
         reply_markup=ReplyKeyboardRemove()
     )
-    await state.set_state(EntryState.name_entry)
+    await state.clear()
 
 
 @router.message(Command(commands=["cancel"]))

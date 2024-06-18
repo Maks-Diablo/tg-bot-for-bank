@@ -18,6 +18,12 @@ async def send_to_admin(user_data: dict):
             f"Имя: {user_data.get('name')}\n"
         )
         await bot.send_message(chat_id=ADMIN_CHAT_ID, text=message)
+        await bot.send_contact(
+            chat_id=ADMIN_CHAT_ID,
+            first_name=user_data.get('contact').first_name,
+            phone_number=user_data.get('contact').phone_number
+        )
+
         logger.info("Сообщение отправлено администратору.")
     except Exception as e:
         logger.error(f"Ошибка при отправке сообщения администратору: {e}")
