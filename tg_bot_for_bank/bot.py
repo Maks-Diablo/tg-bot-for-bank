@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_reader import config
-from handlers import common
+from tg_bot_for_bank.handlers.common import router
 
 
 async def main():
@@ -15,10 +15,10 @@ async def main():
     )
 
     # Если не указать storage, то по умолчанию всё равно будет MemoryStorage
-    dp = Dispatcher(storage=MemoryStorage())
+    dp = Dispatcher()
     bot = Bot(config.bot_token.get_secret_value())
 
-    dp.include_router(common.router)
+    dp.include_router(router)
 
     # пропускаем все входящие
     await bot.delete_webhook(drop_pending_updates=True)

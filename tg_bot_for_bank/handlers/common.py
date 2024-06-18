@@ -1,16 +1,19 @@
-from aiogram import F, Router
+from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.filters import StateFilter
-from filters.NameFilter import IsFIO
+from tg_bot_for_bank.filters.NameFilter import IsFIO
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state, StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
+from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard
+from tg_bot_for_bank.sender import send_to_admin
 
 router = Router()
 
 
 class EntryState(StatesGroup):
     name_entry = State()
+    name_success = State()
 
 
 @router.message(Command(commands=["start"]))
@@ -23,6 +26,7 @@ async def cmd_start(message: Message, state: FSMContext):
         reply_markup=ReplyKeyboardRemove()
     )
     await state.set_state(EntryState.name_entry)
+    # await state.set_state(None) с сохранением
 
 
 @router.message(
@@ -30,19 +34,64 @@ async def cmd_start(message: Message, state: FSMContext):
     IsFIO(is_fio=True)
 )
 async def name_entry(message: Message, state: FSMContext):
-    await message.reply(
-        text="Спасибо. Ожидайте ответ администартора.",
-    )
     await state.clear()
+    await message.answer(
+        text=f"Данные введены верно?\n<i>{message.text}</i>",
+        parse_mode='HTML',
+        reply_markup=make_row_keyboard(
+            ["Да", "Нет"]
+        )
+    )
+    await state.update_data(
+        name=message.text
+    )
+    await state.set_state(EntryState.name_success)
+
+
+@router.message(
+    EntryState.name_success,
+    F.text == "Да"
+)
+async def name_entry_success(message: Message, state: FSMContext):
+    await message.answer(
+        text="Спасибо. Ожидайте ответ администартора.",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    # отправка данных
+    user_data = await state.get_data()
+    await send_to_admin(user_data)
+    print(user_data)
+    print(message.contact)
+
+    await state.clear()
+
+
+@router.message(
+    EntryState.name_success,
+    F.text == "Нет"
+)
+async def name_entry_not_success(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        text="Повторите ввод ФИО.\n"
+             "(Ввод в формате: Иванов Иван Иванович).",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    await state.set_state(EntryState.name_entry)
 
 
 @router.message(Command(commands=["cancel"]))
 @router.message(F.text.lower() == "отмена")
 async def cmd_cancel(message: Message, state: FSMContext):
-    await state.clear()
-    await message.answer(
-        text="Действие отменено",
-    )
+    if EntryState.name_entry:
+        await state.clear()
+        await message.answer(
+            text="Действие отменено",
+        )
+    else:
+        await message.answer(
+            text="Нечего отменять",
+        )
 
 
 @router.message(StateFilter("EntryState:name_entry"))
