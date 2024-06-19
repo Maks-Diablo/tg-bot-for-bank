@@ -59,7 +59,6 @@ async def cmd_start(message: Message, state: FSMContext):
 
 @router.message(EntryState.name_entr)
 async def name_entr(message: Message, state: FSMContext):
-    await state.clear()
     await message.answer(
         text="Введите ФИО в формате 'Фамилия Имя Отчество'.",
         reply_markup=ReplyKeyboardRemove()
@@ -100,15 +99,21 @@ async def name_entry_2(message: Message, state: FSMContext):
             ["Да", "Нет"]
         )
     )
-
     name = message.text.split()
-    await state.update_data(
-        tg_id=message.from_user.id,
-        lastname=name[0],
-        firstname=name[1],
-        patronymic=name[2],
-        contact=message.contact
-    )
+
+    user_data = await state.get_data()
+    update_data = {
+        'tg_id': message.from_user.id,
+        'lastname': name[0],
+        'firstname': name[1],
+        'patronymic': name[2]
+    }
+
+    if user_data.get('contact'):
+        update_data['contact'] = user_data['contact']
+
+    await state.update_data(**update_data)
+
     await state.set_state(EntryState.name_success)
 
 
@@ -124,7 +129,7 @@ async def name_entry_success(message: Message, state: FSMContext):
 
     user_data = await state.get_data()
     # создание записи в бд
-    add_user(user_data)
+    #add_user(user_data)
     # отправка данных
     await send_to_admin(user_data)
 
@@ -142,7 +147,6 @@ async def name_entry_not_success(message: Message, state: FSMContext):
     #     reply_markup=ReplyKeyboardRemove()
     # )
     # await state.clear()
-    await state.clear()
     await message.answer(
         text="Повторите ввод ФИО.\n"
              "(Ввод в формате: Иванов Иван Иванович).",
