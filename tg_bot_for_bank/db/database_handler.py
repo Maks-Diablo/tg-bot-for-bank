@@ -7,8 +7,14 @@ from tg_bot_for_bank.db.models import *
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+async def get_user_role_from_db(user_id: int) -> str:
+    try:
+        employee = Employees.get(Employees.tg_id == user_id)
+        position = employee.position_id
+        return position.title
+    except DoesNotExist:
+        return 'Guest'
 
-# Класс для операций с базой данных
 def add_user(user_data):
     try:
         user = Employees.create(

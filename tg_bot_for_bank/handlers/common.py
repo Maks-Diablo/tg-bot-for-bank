@@ -11,7 +11,7 @@ from aiogram.types import Message, ReplyKeyboardRemove
 from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
 from tg_bot_for_bank.sender import send_to_admin
 
-router = Router()
+auth_router = Router()
 
 
 class EntryState(StatesGroup):
@@ -21,7 +21,7 @@ class EntryState(StatesGroup):
     name_success = State()
 
 
-@router.message(
+@auth_router.message(
     Command(commands=["start"]),
     UserExist(user_exist=False)
 )
@@ -57,7 +57,7 @@ async def cmd_start(message: Message, state: FSMContext):
     # await state.set_state(None) с сохранением
 
 
-@router.message(EntryState.name_entr)
+@auth_router.message(EntryState.name_entr)
 async def name_entr(message: Message, state: FSMContext):
     await message.answer(
         text="Введите ФИО в формате 'Фамилия Имя Отчество'.",
@@ -66,7 +66,7 @@ async def name_entr(message: Message, state: FSMContext):
     await state.set_state(EntryState.name_entry_2)
 
 
-@router.message(
+@auth_router.message(
     EntryState.name_entry,
     F.contact,
 )
@@ -87,7 +87,7 @@ async def name_entry(message: Message, state: FSMContext):
     await state.set_state(EntryState.name_success)
 
 
-@router.message(
+@auth_router.message(
     EntryState.name_entry_2,
     IsFIO(is_fio=True)
 )
@@ -117,7 +117,7 @@ async def name_entry_2(message: Message, state: FSMContext):
     await state.set_state(EntryState.name_success)
 
 
-@router.message(
+@auth_router.message(
     EntryState.name_success,
     F.text == "Да"
 )
@@ -129,14 +129,14 @@ async def name_entry_success(message: Message, state: FSMContext):
 
     user_data = await state.get_data()
     # создание записи в бд
-    #add_user(user_data)
+    await add_user(user_data)
     # отправка данных
     await send_to_admin(user_data)
 
     await state.clear()
 
 
-@router.message(
+@auth_router.message(
     EntryState.name_success,
     F.text == "Нет"
 )
@@ -155,8 +155,8 @@ async def name_entry_not_success(message: Message, state: FSMContext):
     await state.set_state(EntryState.name_entry_2)
 
 
-@router.message(Command(commands=["cancel"]))
-@router.message(F.text.lower() == "отмена")
+@auth_router.message(Command(commands=["cancel"]))
+@auth_router.message(F.text.lower() == "отмена")
 async def cmd_cancel(message: Message, state: FSMContext):
     if EntryState.name_entry:
         await state.clear()
@@ -169,11 +169,11 @@ async def cmd_cancel(message: Message, state: FSMContext):
         )
 
 
-@router.message(UserExist(user_exist=True))
+@auth_router.message(UserExist(user_exist=True))
 async def name_entry_incorrectly(message: Message):
     await message.reply("Приветствую.\nВы уже авторизованный пользователь.")
 
 
-@router.message(StateFilter("EntryState:name_entry", "EntryState:name_entry_2"))
+@auth_router.message(StateFilter("EntryState:name_entry", "EntryState:name_entry_2"))
 async def name_entry_incorrectly(message: Message):
     await message.reply("Сообщение не соответствует формату 'Фамилия Имя Отчество'.")

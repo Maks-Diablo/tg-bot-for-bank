@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
@@ -14,3 +14,14 @@ async def contact_keyboard():
     first_button = [[KeyboardButton(text=("📱 Отправить"), request_contact=True)]]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
     return markup
+
+
+# inline keyboard
+def make_row_inline_keyboard(items: list[str]) -> InlineKeyboardMarkup:
+    """
+    Создаёт инлайн-клавиатуру с кнопками в один ряд
+    :param items: список текстов для кнопок
+    :return: объект инлайн-клавиатуры
+    """
+    row = [InlineKeyboardButton(text=item, callback_data=item) for item in items]
+    return InlineKeyboardMarkup(inline_keyboard=[row])
