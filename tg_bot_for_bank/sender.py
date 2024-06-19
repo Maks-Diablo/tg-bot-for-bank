@@ -14,8 +14,8 @@ async def send_to_admin(user_data: dict):
 
     try:
         message = (
-            "Новые данные от пользователя:\n"
-            f"Имя: {user_data.get('name')}\n"
+            "Запрос на авторизацию нового сотрудника:\n"
+            f"{user_data.get('lastname')} {user_data.get('firstname')} {user_data.get('patronymic')}\n"
         )
         await bot.send_message(chat_id=ADMIN_CHAT_ID, text=message)
         await bot.send_contact(
