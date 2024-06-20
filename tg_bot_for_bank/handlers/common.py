@@ -10,6 +10,7 @@ from aiogram.fsm.state import default_state, StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
 from tg_bot_for_bank.sender import send_to_admin
+from tg_bot_for_bank.qr.conversion import convert_name_to_filename, convert_filename_to_name
 
 auth_router = Router()
 
@@ -39,14 +40,22 @@ async def cmd_start(message: Message, state: FSMContext):
     )
 
     if args:
-        arguments = args[0].split('_')
+        cont = args[0].split('_')
+        arguments = convert_filename_to_name(args[0])
+        arguments = arguments.split(' ')
+
+        lastname = arguments[0]
+        firstname = arguments[1]
+        patronymic = arguments[2]
+        print(lastname)
+        contact_start = cont[3]
 
         await state.update_data(
             tg_id=message.from_user.id,
-            lastname=arguments[0],
-            firstname=arguments[1],
-            patronymic=arguments[2],
-            contact_start=arguments[3]
+            lastname=lastname,
+            firstname=firstname,
+            patronymic=patronymic,
+            contact_start=contact_start
         )
 
         await state.set_state(EntryState.name_entry)

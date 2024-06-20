@@ -1,10 +1,8 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message
+from aiogram import Bot, Dispatcher
 from config_reader import config
-from tg_bot_for_bank.db.database_handler import get_user_role_from_db
 from tg_bot_for_bank.filters.role_filter import RoleFilter
 from tg_bot_for_bank.handlers.common import auth_router
 from tg_bot_for_bank.handlers.sup_admin import sup_admin_router
