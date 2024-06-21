@@ -9,6 +9,7 @@ conversion_dict = {
 # Словарь для обратной конвертации
 reverse_conversion_dict = {v: k for k, v in conversion_dict.items()}
 
+
 # Функция для конвертации имени в формат Фамилия_Имя_Отчество
 def convert_name_to_filename(name):
     converted = []
@@ -22,6 +23,7 @@ def convert_name_to_filename(name):
         converted.append(convert_string(middlename, conversion_dict))
     return '_'.join(converted)
 
+
 # Функция для обратной конвертации Фамилия_Имя_Отчество в Фамилия Имя Отчество
 def convert_filename_to_name(filename):
     parts = filename.split('_')
@@ -32,6 +34,7 @@ def convert_filename_to_name(filename):
         return format_name(f"{surname} {firstname} {middlename}")
     return filename
 
+
 # Функция для конвертации строки по заданному словарю
 def convert_string(s, conversion_dict):
     converted = []
@@ -41,6 +44,7 @@ def convert_string(s, conversion_dict):
         else:
             converted.append(char)
     return ''.join(converted)
+
 
 # Функция для обратной конвертации строки
 def reverse_convert_string(s, reverse_conversion_dict):
@@ -66,4 +70,3 @@ def format_name(full_name):
 
     # Возвращаем объединенную строку
     return ' '.join(formatted_parts)
-

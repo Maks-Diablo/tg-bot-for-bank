@@ -1,17 +1,42 @@
 from aiogram import F, Router, types
 from aiogram.filters import Command
-from aiogram.filters import StateFilter
-
-from tg_bot_for_bank.db.database_handler import add_user
-from tg_bot_for_bank.filters.name_filter import IsFIO
-from tg_bot_for_bank.filters.user_exists_filter import UserExist
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state, StatesGroup, State
-from aiogram.types import Message, ReplyKeyboardRemove
-from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
-from tg_bot_for_bank.sender import send_to_admin
+from aiogram.types import Message
+
+from tg_bot_for_bank.db.database_handler import update_position_id
+from tg_bot_for_bank.services.message_deleter import delete_messages
+from tg_bot_for_bank.services.sender import send_to
 
 sup_admin_router = Router()
+
+
+@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith(('accept_', 'reject_')))
+async def process_callback(callback: types.CallbackQuery):
+    action, tg_id, lastname, firstname, patronymic = callback.data.split('_')
+    if action == 'accept':
+        # Логика для принятия пользователя
+        await update_position_id(tg_id, 'Employee')
+
+        await send_to(tg_id, 'Администратор одобрил Вам авторизацию.\nВаш текущий статус - <b>Сотрудник</b>')
+
+        message_ids_to_delete = [callback.message.message_id - i for i in range(0, 2)]
+        await delete_messages(callback.message.chat.id, message_ids_to_delete)
+
+        await callback.message.answer(f"Запрос от <b>{lastname} {firstname} {patronymic}</b> принят.",
+                                      parse_mode='HTML')
+    elif action == 'reject':
+        # Логика для отказа пользователю
+        await update_position_id(tg_id, 'DEACTIVE')
+        await send_to(tg_id, 'Администратор отказал Вам в авторизации.')
+
+        message_ids_to_delete = [callback.message.message_id - i for i in range(0, 2)]
+        await delete_messages(callback.message.chat.id, message_ids_to_delete)
+
+        await callback.message.answer(f"Запрос от <b>{lastname} {firstname} {patronymic}</b> отклонён.",
+                                      parse_mode='HTML')
+
+    await callback.answer()
+
 
 @sup_admin_router.message(Command("start"))
 async def cmd_start(message: types.Message):
@@ -39,12 +64,3 @@ async def cmd_cancel(message: Message, state: FSMContext):
     #         text="Нечего отменять",
     #     )
     pass
-
-@sup_admin_router.message(UserExist(user_exist=True))
-async def name_entry_incorrectly(message: Message):
-    await message.reply("Приветствую.\nВы уже авторизованный пользователь.")
-
-
-@sup_admin_router.message(StateFilter("EntryState:name_entry", "EntryState:name_entry_2"))
-async def name_entry_incorrectly(message: Message):
-    await message.reply("Сообщение не соответствует формату 'Фамилия Имя Отчество'.")

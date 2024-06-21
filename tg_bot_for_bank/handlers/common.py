@@ -1,4 +1,4 @@
-from aiogram import F, Router, types
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters import StateFilter
 
@@ -6,11 +6,12 @@ from tg_bot_for_bank.db.database_handler import add_user
 from tg_bot_for_bank.filters.name_filter import IsFIO
 from tg_bot_for_bank.filters.user_exists_filter import UserExist
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import default_state, StatesGroup, State
+from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
-from tg_bot_for_bank.sender import send_to_admin
-from tg_bot_for_bank.qr.conversion import convert_name_to_filename, convert_filename_to_name
+from tg_bot_for_bank.services.message_deleter import delete_messages
+from tg_bot_for_bank.services.sender import send_to_admin
+from tg_bot_for_bank.qr.conversion import convert_filename_to_name
 
 auth_router = Router()
 
@@ -47,7 +48,6 @@ async def cmd_start(message: Message, state: FSMContext):
         lastname = arguments[0]
         firstname = arguments[1]
         patronymic = arguments[2]
-        print(lastname)
         contact_start = cont[3]
 
         await state.update_data(
@@ -71,6 +71,9 @@ async def name_entr(message: Message, state: FSMContext):
     await message.answer(
         text="Введите ФИО в формате 'Фамилия Имя Отчество'.",
         reply_markup=ReplyKeyboardRemove()
+    )
+    await state.update_data(
+        contact=message.contact
     )
     await state.set_state(EntryState.name_entry_2)
 
@@ -186,3 +189,9 @@ async def name_entry_incorrectly(message: Message):
 @auth_router.message(StateFilter("EntryState:name_entry", "EntryState:name_entry_2"))
 async def name_entry_incorrectly(message: Message):
     await message.reply("Сообщение не соответствует формату 'Фамилия Имя Отчество'.")
+
+# НЕ РАБОТАЕТ, ПОФИКСИТЬ
+# @auth_router.message(lambda message: message.text == "Администратор отказал Вам в авторизации." and message.from_user.is_bot)
+# async def delete_inf_auth_msg(message: Message):
+#     print("Обработка сообщения...")
+#     await delete_messages(message.chat.id, [message.message_id - 1])

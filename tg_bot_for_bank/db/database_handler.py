@@ -7,6 +7,7 @@ from tg_bot_for_bank.db.models import *
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 async def get_user_role_from_db(user_id: int) -> str:
     try:
         employee = Employees.get(Employees.tg_id == user_id)
@@ -15,7 +16,8 @@ async def get_user_role_from_db(user_id: int) -> str:
     except DoesNotExist:
         return 'Guest'
 
-def add_user(user_data):
+
+async def add_user(user_data):
     try:
         user = Employees.create(
             tg_id=user_data.get('tg_id'),
@@ -31,17 +33,14 @@ def add_user(user_data):
         return None
 
 
-class DatabaseManager:
-    pass
+async def update_position_id(tg_id, position_title):
+    try:
+        position = Positions.get(Positions.title == position_title)
+        user = Employees.get(Employees.tg_id == tg_id)
 
-    # def update_email(self, username, new_email):
-    #     try:
-    #         user = Employees.get(Employees.username == username)
-    #         user.email = new_email
-    #         user.save()
-    #         print(f"Email пользователя {username} успешно обновлён.")
-    #         return user
-    #     except DoesNotExist:
-    #         print(f"Пользователь с именем {username} не найден.")
-    #         logger.error(f"Ошибка при отправке сообщения администратору: {e}")
-    #         return None
+        user.position_id = position.id
+        user.save()
+
+        logger.info(f"Position пользователя {tg_id} успешно обновлён на '{position}'.")
+    except DoesNotExist:
+        logger.error(f"Пользователь с TG_ID {tg_id} не найден.")

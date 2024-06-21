@@ -1,5 +1,4 @@
 import qrcode
-from PIL import Image
 from conversion import convert_name_to_filename, convert_filename_to_name
 
 # Данные сотрудников
