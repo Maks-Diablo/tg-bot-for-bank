@@ -3,7 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 def sup_admin_keyboard():
     first_button = [
-        [KeyboardButton(text=("Пользователи")), KeyboardButton(text=("2"))],
+        [KeyboardButton(text=("Пользователи")), KeyboardButton(text=("Запросы"))],
         [KeyboardButton(text=("3"))]
     ]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
@@ -40,3 +40,22 @@ def make_row_inline_keyboard(items: list[dict]) -> InlineKeyboardMarkup:
         for item in items
     ]
     return InlineKeyboardMarkup(inline_keyboard=[row])
+
+
+def make_row_inline_keyboard_mutiple(items: list[list[dict]]) -> InlineKeyboardMarkup:
+    """
+    Создаёт инлайн-клавиатуру с кнопками в несколько рядов
+    :param items: список списков словарей с текстами для кнопок и callback_data
+    :return: объект инлайн-клавиатуры
+    """
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text=item['text'],
+                callback_data=item.get('callback_data', item['text'])
+            )
+            for item in row
+        ]
+        for row in items
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

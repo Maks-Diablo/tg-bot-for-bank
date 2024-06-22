@@ -5,7 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
 from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_from_db, get_user_FIO_from_db
-from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard
+from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple
 from tg_bot_for_bank.services.message_deleter import delete_messages
 from tg_bot_for_bank.services.sender import send_to
 
@@ -17,7 +17,7 @@ class ActionState(StatesGroup):
     admin_list_state = State()
 
 
-@sup_admin_router.message(F.text.lower() == "2")
+@sup_admin_router.message(F.text.lower() == "Запросы")
 async def emlist2(message: Message, state: FSMContext):
     message_ids_to_delete = [message.message_id - i for i in range(1, 2)]
     await delete_messages(message.chat.id, message_ids_to_delete)
@@ -98,12 +98,12 @@ async def emloyees_list_callback(callback: types.CallbackQuery, state: FSMContex
 
     if len(employees_arr) > 1:
         keyboard_items = [
-            {'text': '👈',
+            [{'text': '👈',
              'callback_data': "getLeftEmployeeList"},
             {'text': '👉',
-             'callback_data': "getRightEmployeeList"},
-            {'text': 'Администраторы',
-             'callback_data': "getAdminList"},
+             'callback_data': "getRightEmployeeList"}],
+            [{'text': 'Администраторы 🤖',
+             'callback_data': "getAdminList"}]
         ]
 
         data = await state.get_data()
@@ -114,11 +114,11 @@ async def emloyees_list_callback(callback: types.CallbackQuery, state: FSMContex
                  f"{employees_arr[list_page]}",
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard(keyboard_items)
+            reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
         )
     else:
         keyboard_items = [
-            {'text': 'Администраторы',
+            {'text': 'Администраторы 🤖',
              'callback_data': "getAdminList"},
         ]
 
@@ -146,12 +146,12 @@ async def emloyees_list(message: Message, state: FSMContext):
 
     if len(employees_arr) > 1:
         keyboard_items = [
-            {'text': '👈',
+            [{'text': '👈',
              'callback_data': "getLeftEmployeeList"},
             {'text': '👉',
-             'callback_data': "getRightEmployeeList"},
-            {'text': 'Администраторы',
-             'callback_data': "getAdminList"},
+             'callback_data': "getRightEmployeeList"}],
+            [{'text': 'Администраторы 🤖',
+             'callback_data': "getAdminList"}]
         ]
 
         data = await state.get_data()
@@ -163,11 +163,11 @@ async def emloyees_list(message: Message, state: FSMContext):
                  f"{employees_arr[list_page]}",
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard(keyboard_items)
+            reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
         )
     else:
         keyboard_items = [
-            {'text': 'Администраторы',
+            {'text': 'Администраторы 🤖',
              'callback_data': "getAdminList"},
         ]
 
@@ -176,7 +176,7 @@ async def emloyees_list(message: Message, state: FSMContext):
                  f"{employees_arr[0]}",
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard(keyboard_items)
+            reply_markup=make_row_inline_keyboard_mutiple([keyboard_items])
         )
 
 
@@ -192,12 +192,12 @@ async def admin_list_callback(callback: types.CallbackQuery, state: FSMContext):
 
     if len(admins_arr) > 1:
         keyboard_items = [
-            {'text': '👈',
+            [{'text': '👈',
              'callback_data': "getLeftAdminList"},
             {'text': '👉',
-             'callback_data': "getRightAdminList"},
-            {'text': 'Сотрудники',
-             'callback_data': "getEmployeesList"},
+             'callback_data': "getRightAdminList"}],
+            [{'text': 'Сотрудники 👨‍💼',
+             'callback_data': "getEmployeesList"}]
         ]
 
         data = await state.get_data()
@@ -209,11 +209,11 @@ async def admin_list_callback(callback: types.CallbackQuery, state: FSMContext):
                  f"{admins_arr[list_page]}",
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard(keyboard_items)
+            reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
         )
     else:
         keyboard_items = [
-            {'text': 'Сотрудники',
+            {'text': 'Сотрудники 👨‍💼',
              'callback_data': "getEmployeesList"},
         ]
 
