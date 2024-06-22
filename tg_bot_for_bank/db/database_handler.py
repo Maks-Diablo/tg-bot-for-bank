@@ -8,6 +8,46 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+async def get_all_employees_from_db(positions):
+    try:
+        query = Employees.select().join(Positions).where(Positions.title.in_(positions))
+        # Выполнение запроса и вывод результатов
+        employees = query.execute()
+        employees_list = ''
+        employees_arr = []
+
+        for index, employee in enumerate(employees, start=1):
+            if employee.tg_username:
+                # Формируем ссылку, если tg_firstname не null
+                employees_list += f"<a href='https://t.me/{employee.tg_username}'>{index}. {employee.lastname} {employee.firstname} {employee.patronymic}</a>\n"
+            else:
+                # Если tg_firstname отсутствует, просто выводим текст без ссылки
+                employees_list += f"{index}. {employee.lastname} {employee.firstname} {employee.patronymic}\n"
+
+            if index % 20 == 0:
+                employees_arr.append(employees_list)
+                employees_list = ''
+
+        # Добавляем оставшиеся элементы, если они есть
+        if employees_list:
+            employees_arr.append(employees_list)
+
+        return employees_arr
+    except DoesNotExist:
+        return ["Список пуст."]
+
+
+async def get_user_FIO_from_db(user_id: int):
+    try:
+        employee = Employees.get(Employees.tg_id == user_id)
+        lastname = employee.lastname
+        firstname = employee.firstname
+        patronymic = employee.patronymic
+        return lastname, firstname, patronymic
+    except DoesNotExist:
+        return ''
+
+
 async def get_user_role_from_db(user_id: int) -> str:
     try:
         employee = Employees.get(Employees.tg_id == user_id)
@@ -21,6 +61,7 @@ async def add_user(user_data):
     try:
         user = Employees.create(
             tg_id=user_data.get('tg_id'),
+            tg_username=user_data.get('tg_username'),
             position_id=5,
             lastname=user_data.get('lastname'),
             firstname=user_data.get('firstname'),

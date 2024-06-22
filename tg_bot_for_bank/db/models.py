@@ -24,6 +24,7 @@ class Positions(BaseModel):
 
 class Employees(BaseModel):
     tg_id = IntegerField()
+    tg_username = CharField(null=True)
     position_id = ForeignKeyField(Positions)
     lastname = CharField()
     firstname = CharField()

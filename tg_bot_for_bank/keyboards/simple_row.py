@@ -1,6 +1,14 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 
+def sup_admin_keyboard():
+    first_button = [
+        [KeyboardButton(text=("Пользователи")), KeyboardButton(text=("2"))],
+        [KeyboardButton(text=("3"))]
+    ]
+    markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
+    return markup
+
 def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     """
     Создаёт реплай-клавиатуру с кнопками в один ряд

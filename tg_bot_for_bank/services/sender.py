@@ -16,9 +16,9 @@ async def send_to_admin(user_data: dict):
 
     keyboard_items = [
         {'text': 'Принять',
-         'callback_data': f"accept_{user_data.get('tg_id')}_{user_data.get('lastname')}_{user_data.get('firstname')}_{user_data.get('patronymic')}"},
+         'callback_data': f"accept_{user_data.get('tg_id')}"},
         {'text': 'Отказать',
-         'callback_data': f"reject_{user_data.get('tg_id')}_{user_data.get('lastname')}_{user_data.get('firstname')}_{user_data.get('patronymic')}"},
+         'callback_data': f"reject_{user_data.get('tg_id')}"},
     ]
 
     try:
