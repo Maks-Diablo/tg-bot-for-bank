@@ -8,6 +8,25 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+async def un_block_empolyee(FIO, type):
+    FIO = FIO.split()
+    if type == 'block': position = 6
+    else: position = 3
+    try:
+        try:
+            employee = Employees.get(Employees.lastname == FIO[0], Employees.firstname == FIO[1], Employees.patronymic == FIO[2])
+            employee.position_id = position
+            employee.save()
+
+            logger.info(f"Пользователь {FIO} успешно заблокирован.")
+            return True
+        except DoesNotExist:
+            logger.error(f"Пользователь {FIO} не заблокирован (возможно не найден).")
+            return False
+    except Exception as ex:
+        logger.error(f"Ошибка при разблокировании\блокировании пользователя {FIO}: {ex}")
+        return False
+
 async def get_all_employees_from_db():
     try:
         employees = Employees.select().join(Positions).where(Positions.title.in_(["Administrator", "Employee"]))

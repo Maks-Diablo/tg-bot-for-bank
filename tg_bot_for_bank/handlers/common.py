@@ -25,9 +25,10 @@ async def cmd_start(message: Message, state: FSMContext):
         await auth_user_start(message, state)
     else:
         role = await get_user_role_from_db(message.from_user.id)
-        await message.reply(f"Приветствую.\nВаша роль - <i>{role}</i>.\nВыберите действие 👇", parse_mode='HTML',
-                            reply_markup=sup_admin_keyboard())
-
+        await message.reply(f"Приветствую.\nВаша роль - <i>{role}</i>.", parse_mode='HTML')
+        await message.answer("Выберите действие 👇",
+                            reply_markup=sup_admin_keyboard(),
+                             disable_notification=True)
 # @common_router.message(UserExist(user_exist=True))
 # async def name_entry_incorrectly(message: Message):
 #     await message.reply("Приветствую.\nВы уже авторизованный пользователь.")

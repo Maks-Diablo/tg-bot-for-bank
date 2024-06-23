@@ -3,11 +3,13 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 def sup_admin_keyboard():
     first_button = [
-        [KeyboardButton(text=("Пользователи")), KeyboardButton(text=("Запросы"))],
-        [KeyboardButton(text=("Информирование"))]
+        [KeyboardButton(text=("👥 Управление пользователями"))],
+        [KeyboardButton(text=("📥 Запросы"))],
+        [KeyboardButton(text=("📢 Информирование"))]
     ]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
     return markup
+
 
 def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     """
@@ -17,6 +19,24 @@ def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     """
     row = [KeyboardButton(text=item) for item in items]
     return ReplyKeyboardMarkup(keyboard=[row], resize_keyboard=True)
+
+
+def make_row_keyboard_mutiple(items: list[list[str]]) -> ReplyKeyboardMarkup:
+    """
+    Создаёт реплай-клавиатуру с кнопками в один ряд
+    :param items: список текстов для кнопок
+    :return: объект реплай-клавиатуры
+    """
+    keyboard = [
+        [
+            KeyboardButton(
+                text=item,
+            )
+            for item in row
+        ]
+        for row in items
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 async def contact_keyboard():
@@ -59,3 +79,4 @@ def make_row_inline_keyboard_mutiple(items: list[list[dict]]) -> InlineKeyboardM
         for row in items
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+

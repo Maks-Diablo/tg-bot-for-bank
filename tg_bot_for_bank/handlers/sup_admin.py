@@ -5,9 +5,9 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_list_from_db, \
-    get_user_FIO_from_db, get_all_employees_from_db
+    get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee
 from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
-    make_row_keyboard, sup_admin_keyboard
+    make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
 from tg_bot_for_bank.services.message_deleter import delete_messages
 from tg_bot_for_bank.services.sender import send_to
 
@@ -22,6 +22,13 @@ class ActionState(StatesGroup):
     inf_msg_entr = State()
     inf_msg_success = State()
 
+class UserManagState(StatesGroup):
+    user_manag = State()
+    employee_block = State()
+    employee_block_success = State()
+    employee_unlock = State()
+    employee_unlock_success = State()
+    employee_change_role = State()
 
 @sup_admin_router.message(ActionState.start_state)
 async def information_message_success(message: Message, state: FSMContext):
@@ -34,19 +41,65 @@ async def emlist2(message: Message, state: FSMContext):
     await delete_messages(message.chat.id, message_ids_to_delete)
 
 
-@sup_admin_router.message(F.text.lower() == "информирование")
+@sup_admin_router.message(F.text.lower() == "📢 информирование")
 async def information_message(message: Message, state: FSMContext):
-    await state.clear()
+    await state.set_state(ActionState.inf_msg_entr)
 
-    message_ids_to_delete = [message.message_id - i for i in range(1)]
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
     await delete_messages(message.chat.id, message_ids_to_delete)
 
     await message.answer(
-        text="Введите сообщение для отправки сотрудникам:",
-        reply_markup=ReplyKeyboardRemove()
+        text="Введите сообщение для отправки сотрудникам 👇",
+        reply_markup=make_row_keyboard(["❌ Отмена"])
     )
 
-    await state.set_state(ActionState.inf_msg_entr)
+@sup_admin_router.message(
+    F.text.lower() == "❌ отмена",
+    UserManagState.employee_block
+)
+@sup_admin_router.message(
+    F.text.lower() == "❌ отмена",
+    UserManagState.employee_unlock
+)
+@sup_admin_router.message(F.text.lower() == "👥 управление пользователями")
+async def employees_buttons_manage(message: Message, state: FSMContext):
+    await state.set_state(UserManagState.user_manag)
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await message.answer(
+        text="Вы находитесь в меню <b>Управления пользователями</b>.\nВыберите действие 👇",
+        parse_mode='HTML',
+        reply_markup=make_row_keyboard_mutiple([
+            ["📋 Список пользователей"],
+            ["🔒 Заблокировать", "🔓 Разблокировать"],
+            ["🎭 Изменить роль пользователя"],
+            ["🔙 Назад"]
+        ]
+        )
+    )
+
+@sup_admin_router.message(
+    F.text.lower() == "❌ отмена",
+    ActionState.inf_msg_entr
+)
+@sup_admin_router.message(F.text.lower() == "🔙 назад")
+async def employees_buttons(message: Message, state: FSMContext):
+    if ActionState.employee_list_state or ActionState.admin_list_state:
+        message_ids_to_delete = [message.message_id - i for i in range(0, 4)]
+        await delete_messages(message.chat.id, message_ids_to_delete)
+    else:
+        message_ids_to_delete = [message.message_id - i for i in range(0, 2)]
+        await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await state.clear()
+
+    await message.answer(
+        text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
+        parse_mode='HTML',
+        reply_markup=sup_admin_keyboard()
+    )
 
 
 @sup_admin_router.message(ActionState.inf_msg_entr, F.text)
@@ -62,17 +115,18 @@ async def information_message_entry(message: Message, state: FSMContext):
     await delete_messages(message.chat.id, message_ids_to_delete)
 
     await message.answer(
-        text=f"Вы собираетесь отправить сообщение:\n<i>{inf_msg}</i>\n\nВсё верно?",
+        text=f"Вы собираетесь отправить сообщение:\n\n<i>{inf_msg}</i>\n\nВсё верно?",
         parse_mode='HTML',
-        reply_markup=make_row_keyboard(
-            ["Подтвердить", "Отменить"]
+        reply_markup=make_row_keyboard_mutiple([
+            ["✅ Подтвердить", "🔄 Изменить"],
+            ["❌ Отмена"]]
         )
     )
 
     await state.set_state(ActionState.inf_msg_success)
 
 
-@sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "подтвердить")
+@sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "✅ подтвердить")
 async def information_message_success(message: Message, state: FSMContext):
     data = await state.get_data()
     inf_msg = data.get('inf_msg')
@@ -93,17 +147,189 @@ async def information_message_success(message: Message, state: FSMContext):
     await state.set_state(ActionState.start_state)
 
 
-@sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "отменить")
-async def information_message_cancel(message: Message, state: FSMContext):
-    await state.clear()
+@sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "🔄 изменить")
+async def information_message_re_enter(message: Message, state: FSMContext):
+    await information_message(message, state)
+
+# Обработка нажатия "Изменить роль пользователя"
+# @sup_admin_router.message(
+#     F.text.lower() == "🎭 изменить роль пользователя",
+#     UserManagState.user_manag
+# )
+# async def emloyee_role_change(message: Message, state: FSMContext):
+#     await state.set_state(UserManagState.employee_change_role)
+#
+#     message_ids_to_delete = [message.message_id - i for i in range(2)]
+#     await delete_messages(message.chat.id, message_ids_to_delete)
+#
+#     await message.answer(
+#         text="Введите ФИО пользователя, чью роль хотите изменить 👇",
+#         reply_markup=make_row_keyboard(["❌ Отмена"])
+#     )
+#
+# @sup_admin_router.message(UserManagState.employee_change_role, F.text)
+# async def emloyee_role_change_entry(message: Message, state: FSMContext):
+#     await state.update_data(
+#         fio_change_msg=message.text
+#     )
+#
+#     data = await state.get_data()
+#     fio_change_msg = data.get('fio_change_msg')
+#
+#     message_ids_to_delete = [message.message_id - i for i in range(2)]
+#     await delete_messages(message.chat.id, message_ids_to_delete)
+#
+#     await message.answer(
+#         text=f"Вы собираетесь изменить роль пользователя:\n\n<i>{fio_change_msg}</i>\n\nВсё верно?",
+#         parse_mode='HTML',
+#         reply_markup=make_row_keyboard_mutiple([
+#             ["✅ Подтвердить", "🔄 Изменить"],
+#             ["❌ Отмена"]]
+#         )
+#     )
+#
+#     await state.set_state(UserManagState.employee_block_success)
+
+# Обработка нажатия "Заблокировать"
+@sup_admin_router.message(
+    F.text.lower() == "🔒 заблокировать",
+    UserManagState.user_manag
+)
+async def emloyees_block(message: Message, state: FSMContext):
+    await state.set_state(UserManagState.employee_block)
 
     message_ids_to_delete = [message.message_id - i for i in range(2)]
     await delete_messages(message.chat.id, message_ids_to_delete)
 
     await message.answer(
-        text="Действие отменено.",
-        reply_markup=sup_admin_keyboard()
+        text="Введите ФИО пользователя, которого хотите заблокировать 👇",
+        reply_markup=make_row_keyboard(["❌ Отмена"])
     )
+
+
+@sup_admin_router.message(UserManagState.employee_block_success, F.text.lower() == "🔄 изменить")
+async def information_message_re_enter(message: Message, state: FSMContext):
+    await emloyees_block(message, state)
+
+
+@sup_admin_router.message(UserManagState.employee_block, F.text)
+async def emloyees_block_entry(message: Message, state: FSMContext):
+    await state.update_data(
+        fio_block_msg=message.text
+    )
+
+    data = await state.get_data()
+    fio_block_msg = data.get('fio_block_msg')
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await message.answer(
+        text=f"Вы собираетесь заблокировать пользователя:\n\n<i>{fio_block_msg}</i>\n\nВсё верно?",
+        parse_mode='HTML',
+        reply_markup=make_row_keyboard_mutiple([
+            ["✅ Подтвердить", "🔄 Изменить"],
+            ["❌ Отмена"]]
+        )
+    )
+
+    await state.set_state(UserManagState.employee_block_success)
+
+
+@sup_admin_router.message(UserManagState.employee_block_success, F.text.lower() == "✅ подтвердить")
+async def emloyees_block_success(message: Message, state: FSMContext):
+    data = await state.get_data()
+    fio_block_msg = data.get('fio_block_msg')
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    block_result = await un_block_empolyee(fio_block_msg, 'block')
+    if block_result:
+        await message.answer(
+            text=f"Пользователь <i>{fio_block_msg}</i> заблокирован.",
+            reply_markup=sup_admin_keyboard(),
+            parse_mode='HTML'
+        )
+    else:
+        await message.answer(
+            text=f"Пользователь <i>{fio_block_msg}</i> не найден.",
+            reply_markup=sup_admin_keyboard(),
+            parse_mode='HTML'
+        )
+    await state.clear()
+    await state.set_state(ActionState.start_state)
+
+
+# Обработка нажатия "Разблокировать"
+@sup_admin_router.message(
+    F.text.lower() == "🔓 разблокировать",
+    UserManagState.user_manag
+)
+async def emloyees_unlock(message: Message, state: FSMContext):
+    await state.set_state(UserManagState.employee_unlock)
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await message.answer(
+        text="Введите ФИО пользователя, которого хотите разблокировать 👇",
+        reply_markup=make_row_keyboard(["❌ Отмена"])
+    )
+
+
+@sup_admin_router.message(UserManagState.employee_unlock_success, F.text.lower() == "🔄 изменить")
+async def information_message_re_enter(message: Message, state: FSMContext):
+    await emloyees_unlock(message, state)
+
+
+@sup_admin_router.message(UserManagState.employee_unlock, F.text)
+async def emloyees_unlock_entry(message: Message, state: FSMContext):
+    await state.update_data(
+        fio_unlock_msg=message.text
+    )
+
+    data = await state.get_data()
+    fio_unlock_msg = data.get('fio_unlock_msg')
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await message.answer(
+        text=f"Вы собираетесь разблокировать пользователя:\n\n<i>{fio_unlock_msg}</i>\n\nВсё верно?",
+        parse_mode='HTML',
+        reply_markup=make_row_keyboard_mutiple([
+            ["✅ Подтвердить", "🔄 Изменить"],
+            ["❌ Отмена"]]
+        )
+    )
+
+    await state.set_state(UserManagState.employee_unlock_success)
+
+
+@sup_admin_router.message(UserManagState.employee_unlock_success, F.text.lower() == "✅ подтвердить")
+async def emloyees_unlock_success(message: Message, state: FSMContext):
+    data = await state.get_data()
+    fio_unlock_msg = data.get('fio_unlock_msg')
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    unlock_result = await un_block_empolyee(fio_unlock_msg, 'unlock')
+    if unlock_result:
+        await message.answer(
+            text=f"Пользователь <i>{fio_unlock_msg}</i> разблокирован.",
+            reply_markup=sup_admin_keyboard(),
+            parse_mode='HTML'
+        )
+    else:
+        await message.answer(
+            text=f"Пользователь <i>{fio_unlock_msg}</i> не найден.",
+            reply_markup=sup_admin_keyboard(),
+            parse_mode='HTML'
+        )
+    await state.clear()
+    await state.set_state(ActionState.start_state)
 
 
 # Обработка нажатия "Пользователи"
@@ -206,7 +432,10 @@ async def emloyees_list_callback(callback: types.CallbackQuery, state: FSMContex
         )
 
 
-@sup_admin_router.message(F.text.lower() == "пользователи")
+@sup_admin_router.message(
+    F.text.lower() == "📋 список пользователей",
+    UserManagState.user_manag
+)
 async def emloyees_list(message: Message, state: FSMContext):
     await state.set_state(ActionState.employee_list_state)
     employees_arr = await get_all_employees_list_from_db(["Administrator", "Employee"])
