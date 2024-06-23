@@ -8,7 +8,15 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-async def get_all_employees_from_db(positions):
+async def get_all_employees_from_db():
+    try:
+        employees = Employees.select().join(Positions).where(Positions.title.in_(["Administrator", "Employee"]))
+        return employees
+    except DoesNotExist:
+        return None
+
+
+async def get_all_employees_list_from_db(positions):
     try:
         query = Employees.select().join(Positions).where(Positions.title.in_(positions))
         # Выполнение запроса и вывод результатов

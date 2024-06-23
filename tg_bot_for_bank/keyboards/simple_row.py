@@ -4,7 +4,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 def sup_admin_keyboard():
     first_button = [
         [KeyboardButton(text=("Пользователи")), KeyboardButton(text=("Запросы"))],
-        [KeyboardButton(text=("3"))]
+        [KeyboardButton(text=("Информирование"))]
     ]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
     return markup
