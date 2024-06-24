@@ -5,10 +5,10 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_reader import config
-from tg_bot_for_bank.filters.role_filter import RoleFilter
-from tg_bot_for_bank.handlers.auth_user import auth_router
-from tg_bot_for_bank.handlers.common import common_router
-from tg_bot_for_bank.handlers.sup_admin import sup_admin_router
+from bot.filters.role_filter import RoleFilter
+from bot.handlers.auth_user import auth_router
+from bot.handlers.common import common_router
+from bot.handlers.sup_admin import sup_admin_router
 
 
 async def main():

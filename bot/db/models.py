@@ -1,6 +1,6 @@
 from peewee import Model, PrimaryKeyField, PostgresqlDatabase, CharField, IntegerField, ForeignKeyField
 
-from tg_bot_for_bank.config_reader import config
+from bot.config_reader import config
 
 db = PostgresqlDatabase(
     host=config.host.get_secret_value(),

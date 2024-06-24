@@ -4,12 +4,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_list_from_db, \
+from bot.db.database_handler import update_position_id, get_all_employees_list_from_db, \
     get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee
-from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
+from bot.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
     make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
-from tg_bot_for_bank.services.message_deleter import delete_messages
-from tg_bot_for_bank.services.sender import send_to
+from bot.services.message_deleter import delete_messages
+from bot.services.sender import send_to
 
 sup_admin_router = Router()
 

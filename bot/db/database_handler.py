@@ -2,7 +2,7 @@ import logging
 
 from peewee import IntegrityError, DoesNotExist
 
-from tg_bot_for_bank.db.models import *
+from bot.db.models import *
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

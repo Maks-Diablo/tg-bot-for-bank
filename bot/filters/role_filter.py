@@ -3,7 +3,7 @@ from typing import Any
 from aiogram import types
 from aiogram.filters import BaseFilter
 
-from tg_bot_for_bank.db.models import Employees
+from bot.db.models import Employees
 
 
 class RoleFilter(BaseFilter):

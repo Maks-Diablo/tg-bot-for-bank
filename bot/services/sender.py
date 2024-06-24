@@ -1,9 +1,9 @@
 import logging
 from aiogram import Bot
 
-from tg_bot_for_bank.config_reader import config
-from tg_bot_for_bank.db.models import Employees
-from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard
+from bot.config_reader import config
+from bot.db.models import Employees
+from bot.keyboards.simple_row import make_row_inline_keyboard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

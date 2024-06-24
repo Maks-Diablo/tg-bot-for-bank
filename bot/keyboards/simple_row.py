@@ -1,4 +1,7 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from bot.keyboards.kb_wrap import kb_wrap
 
 
 def sup_admin_keyboard():
@@ -80,3 +83,10 @@ def make_row_inline_keyboard_mutiple(items: list[list[dict]]) -> InlineKeyboardM
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+
+@kb_wrap(keyboard_type='inline', adjust_keyboard=2)
+def test(builder: InlineKeyboardBuilder) -> InlineKeyboardMarkup:
+    builder.button(
+        text='Test',
+        callback_data='test'
+    )

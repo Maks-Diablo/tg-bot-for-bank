@@ -1,6 +1,6 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
-from tg_bot_for_bank.db.models import Employees
+from bot.db.models import Employees
 
 USER_EXIST = lambda tg_id: Employees.select().where(Employees.tg_id == tg_id).exists()
 

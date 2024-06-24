@@ -1,7 +1,7 @@
 import logging
 from aiogram import Bot
 
-from tg_bot_for_bank.config_reader import config
+from bot.config_reader import config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

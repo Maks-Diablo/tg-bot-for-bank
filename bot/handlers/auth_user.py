@@ -2,16 +2,16 @@ from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters import StateFilter
 
-from tg_bot_for_bank.db.database_handler import add_user
-from tg_bot_for_bank.filters.name_filter import IsFIO
-from tg_bot_for_bank.filters.user_exists_filter import UserExist
+from bot.db.database_handler import add_user
+from bot.filters.name_filter import IsFIO
+from bot.filters.user_exists_filter import UserExist
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
-from tg_bot_for_bank.services.message_deleter import delete_messages
-from tg_bot_for_bank.services.sender import send_to_admin
-from tg_bot_for_bank.qr.conversion import convert_filename_to_name
+from bot.keyboards.simple_row import make_row_keyboard, contact_keyboard
+from bot.services.message_deleter import delete_messages
+from bot.services.sender import send_to_admin
+from bot.qr.conversion import convert_filename_to_name
 
 auth_router = Router()
 

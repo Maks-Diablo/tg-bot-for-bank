@@ -3,17 +3,18 @@ name = "tg-bot-for-bank"
 version = "0.1.0"
 description = ""
 authors = ["Maks-Diablo <v16111980@gmail.com>"]
+assistant=["Chamomile <chamom2les@outlook.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.10"
 requests = "^2.32.3"
 aiogram = "^3.7.0"
 peewee = "^3.17.5"
-psycopg2 = "^2.9.9"
 pydantic-settings = "^2.3.3"
 qrcode = "^7.4.2"
 pillow = "^10.3.0"
+psycopg2-binary = "^2.9.9"
 
 
 [build-system]
@@ -21,4 +22,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
-start-bot = "py tg_bot_for_bank/bot.py"
+start-bot = "python tg_bot_for_bank/bot.py"
