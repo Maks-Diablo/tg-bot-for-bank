@@ -42,6 +42,21 @@ redis = ["redis[hiredis] (>=5.0.1,<5.1.0)"]
 test = ["aresponses (>=2.1.6,<2.2.0)", "pycryptodomex (>=3.19.0,<3.20.0)", "pytest (>=7.4.2,<7.5.0)", "pytest-aiohttp (>=1.0.5,<1.1.0)", "pytest-asyncio (>=0.21.1,<0.22.0)", "pytest-cov (>=4.1.0,<4.2.0)", "pytest-html (>=4.0.2,<4.1.0)", "pytest-lazy-fixture (>=0.6.3,<0.7.0)", "pytest-mock (>=3.12.0,<3.13.0)", "pytest-mypy (>=0.10.3,<0.11.0)", "pytz (>=2023.3,<2024.0)"]
 
 [[package]]
+name = "aiogram-widgets"
+version = "1.2.7"
+description = "Create most popular widgets for aiogram 3 in few code lines "
+optional = false
+python-versions = ">=3.9,<4.0"
+files = [
+    {file = "aiogram_widgets-1.2.7-py3-none-any.whl", hash = "sha256:432b3ce82e91345e802b0230665edc3b8392c12c3460b90fb4e7a2c92c301716"},
+    {file = "aiogram_widgets-1.2.7.tar.gz", hash = "sha256:af2c2daa6769986bda8a332be99bbfe870b4a232db26425300dd351abe9ad608"},
+]
+
+[package.dependencies]
+aiogram = ">=3.0.0b1"
+pydantic = ">=1.10.4"
+
+[[package]]
 name = "aiohttp"
 version = "3.9.5"
 description = "Async http client/server framework (asyncio)"
@@ -181,6 +196,41 @@ tests-mypy = ["mypy (>=1.6)", "pytest-mypy-plugins"]
 tests-no-zope = ["attrs[tests-mypy]", "cloudpickle", "hypothesis", "pympler", "pytest (>=4.3.0)", "pytest-xdist[psutil]"]
 
 [[package]]
+name = "beautifulsoup4"
+version = "4.12.3"
+description = "Screen-scraping library"
+optional = false
+python-versions = ">=3.6.0"
+files = [
+    {file = "beautifulsoup4-4.12.3-py3-none-any.whl", hash = "sha256:b80878c9f40111313e55da8ba20bdba06d8fa3969fc68304167741bbf9e082ed"},
+    {file = "beautifulsoup4-4.12.3.tar.gz", hash = "sha256:74e3d1928edc070d21748185c46e3fb33490f22f52a3addee9aee0f4f7781051"},
+]
+
+[package.dependencies]
+soupsieve = ">1.2"
+
+[package.extras]
+cchardet = ["cchardet"]
+chardet = ["chardet"]
+charset-normalizer = ["charset-normalizer"]
+html5lib = ["html5lib"]
+lxml = ["lxml"]
+
+[[package]]
+name = "bs4"
+version = "0.0.2"
+description = "Dummy package for Beautiful Soup (beautifulsoup4)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "bs4-0.0.2-py2.py3-none-any.whl", hash = "sha256:abf8742c0805ef7f662dce4b51cca104cffe52b835238afc169142ab9b3fbccc"},
+    {file = "bs4-0.0.2.tar.gz", hash = "sha256:a48685c58f50fe127722417bae83fe6badf500d54b55f7e39ffe43b798653925"},
+]
+
+[package.dependencies]
+beautifulsoup4 = "*"
+
+[[package]]
 name = "certifi"
 version = "2024.6.2"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -289,6 +339,20 @@ files = [
     {file = "charset_normalizer-3.3.2-cp39-cp39-win_amd64.whl", hash = "sha256:b01b88d45a6fcb69667cd6d2f7a9aeb4bf53760d7fc536bf679ec94fe9f3ff3d"},
     {file = "charset_normalizer-3.3.2-py3-none-any.whl", hash = "sha256:3e4d1f6587322d2788836a99c69062fbb091331ec940e02d12d179c1d53e25fc"},
 ]
+
+[[package]]
+name = "click"
+version = "8.1.7"
+description = "Composable command line interface toolkit"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "click-8.1.7-py3-none-any.whl", hash = "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"},
+    {file = "click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "colorama"
@@ -520,6 +584,21 @@ python-versions = "*"
 files = [
     {file = "peewee-3.17.5.tar.gz", hash = "sha256:e1b6a64192207fd3ddb4e1188054820f42aef0aadfa749e3981af3c119a76420"},
 ]
+
+[[package]]
+name = "peewee-migrate"
+version = "1.12.2"
+description = "Support for migrations in Peewee ORM"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "peewee_migrate-1.12.2-py3-none-any.whl", hash = "sha256:2930bf83ef802cdb5fb123116c5eb87cbf3756cb27674f674923be6bb27dabee"},
+    {file = "peewee_migrate-1.12.2.tar.gz", hash = "sha256:c8187c97b756909ea57e77cce06ae66395219e86764ef0b286a7bc72ff7405ad"},
+]
+
+[package.dependencies]
+click = "*"
+peewee = ">=3,<4"
 
 [[package]]
 name = "pillow"
@@ -828,6 +907,17 @@ socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
+name = "soupsieve"
+version = "2.5"
+description = "A modern CSS selector implementation for Beautiful Soup."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "soupsieve-2.5-py3-none-any.whl", hash = "sha256:eaa337ff55a1579b6549dc679565eac1e3d000563bcb1c8ab0d0fefbc0c2cdc7"},
+    {file = "soupsieve-2.5.tar.gz", hash = "sha256:5663d5a7b3bfaeee0bc4372e7fc48f9cff4940b3eec54a6451cc5299f1097690"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 description = "Backported and Experimental Type Hints for Python 3.8+"
@@ -961,4 +1051,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "4b4b8278d9583d039c4a37785413df7a74a167cafc212cbf714dd88061e1d08d"
+content-hash = "d64aff3b48a6e20cd29d3ba0d652bc45ac73425ede4bafc9854b15bbbff302fc"

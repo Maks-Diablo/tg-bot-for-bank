@@ -64,6 +64,16 @@ async def get_all_employees_list_from_db(positions):
         return ["Список пуст."]
 
 
+async def get_user_tg_id_from_db(fio: str):
+    fio = fio.split()
+    try:
+        employee = Employees.get(Employees.firstname == fio[1], Employees.lastname == fio[0], Employees.patronymic == fio[2])
+        tg_id = employee.tg_id
+        return tg_id
+    except DoesNotExist:
+        return ''
+
+
 async def get_user_FIO_from_db(user_id: int):
     try:
         employee = Employees.get(Employees.tg_id == user_id)
@@ -110,5 +120,8 @@ async def update_position_id(tg_id, position_title):
         user.save()
 
         logger.info(f"Position пользователя {tg_id} успешно обновлён на '{position}'.")
+
+        return True
     except DoesNotExist:
         logger.error(f"Пользователь с TG_ID {tg_id} не найден.")
+        return False

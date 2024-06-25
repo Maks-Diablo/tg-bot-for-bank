@@ -5,7 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_list_from_db, \
-    get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee
+    get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee, get_user_tg_id_from_db
 from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
     make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
 from tg_bot_for_bank.services.message_deleter import delete_messages
@@ -29,10 +29,16 @@ class UserManagState(StatesGroup):
     employee_unlock = State()
     employee_unlock_success = State()
     employee_change_role = State()
+    employee_change_role_success = State()
 
 @sup_admin_router.message(ActionState.start_state)
-async def information_message_success(message: Message, state: FSMContext):
+async def start_message_main(message: Message, state: FSMContext):
     await state.clear()
+    await message.answer(
+        text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
+        parse_mode='HTML',
+        reply_markup=sup_admin_keyboard()
+    )
 
 
 @sup_admin_router.message(F.text.lower() == "запросы")
@@ -54,6 +60,14 @@ async def information_message(message: Message, state: FSMContext):
     )
 
 @sup_admin_router.message(
+    F.text.lower().startswith("❌ отмена"),
+    UserManagState.employee_change_role_success
+)
+@sup_admin_router.message(
+    F.text.lower() == "❌ отмена",
+    UserManagState.employee_change_role
+)
+@sup_admin_router.message(
     F.text.lower() == "❌ отмена",
     UserManagState.employee_block
 )
@@ -63,10 +77,16 @@ async def information_message(message: Message, state: FSMContext):
 )
 @sup_admin_router.message(F.text.lower() == "👥 управление пользователями")
 async def employees_buttons_manage(message: Message, state: FSMContext):
-    await state.set_state(UserManagState.user_manag)
+    current_state = await state.get_state()
 
-    message_ids_to_delete = [message.message_id - i for i in range(2)]
-    await delete_messages(message.chat.id, message_ids_to_delete)
+    if current_state == UserManagState.employee_change_role:
+        message_ids_to_delete = [message.message_id - i for i in range(4)]
+        await delete_messages(message.chat.id, message_ids_to_delete)
+    else:
+        message_ids_to_delete = [message.message_id - i for i in range(2)]
+        await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await state.set_state(UserManagState.user_manag)
 
     await message.answer(
         text="Вы находитесь в меню <b>Управления пользователями</b>.\nВыберите действие 👇",
@@ -145,28 +165,112 @@ async def information_message_success(message: Message, state: FSMContext):
         await send_to(employee.tg_id, inf_msg)
 
     await state.set_state(ActionState.start_state)
-
+    await start_message_main(message, state)
 
 @sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "🔄 изменить")
 async def information_message_re_enter(message: Message, state: FSMContext):
     await information_message(message, state)
 
 # Обработка нажатия "Изменить роль пользователя"
-# @sup_admin_router.message(
-#     F.text.lower() == "🎭 изменить роль пользователя",
-#     UserManagState.user_manag
-# )
-# async def emloyee_role_change(message: Message, state: FSMContext):
-#     await state.set_state(UserManagState.employee_change_role)
-#
-#     message_ids_to_delete = [message.message_id - i for i in range(2)]
-#     await delete_messages(message.chat.id, message_ids_to_delete)
-#
-#     await message.answer(
-#         text="Введите ФИО пользователя, чью роль хотите изменить 👇",
-#         reply_markup=make_row_keyboard(["❌ Отмена"])
-#     )
-#
+@sup_admin_router.message(
+    F.text.lower() == "🎭 изменить роль пользователя",
+    UserManagState.user_manag
+)
+async def emloyee_role_change(message: Message, state: FSMContext):
+    await state.set_state(UserManagState.employee_change_role)
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    await message.answer(
+        text="Введите ФИО пользователя, чью роль хотите изменить 👇",
+        reply_markup=make_row_keyboard(["❌ Отмена"])
+    )
+
+
+@sup_admin_router.message(UserManagState.employee_change_role, F.text)
+async def emloyee_role_change_role(message: Message, state: FSMContext):
+    await state.update_data(
+        fio_change_msg=message.text
+    )
+
+    keyboard_items = [
+        [{'text': 'Администратор',
+         'callback_data': "setAdminRole"}],
+        [{'text': 'Сотрудник',
+         'callback_data': "setEmployeeRole"}],
+    ]
+
+    await message.answer(
+        text="Выберите роль, на которую хотите изменить 👇",
+        reply_markup=make_row_inline_keyboard_mutiple(keyboard_items),
+    )
+
+
+@sup_admin_router.callback_query(F.data == "setAdminRole")
+async def set_admin_role(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.update_data(
+        role_change_msg="Administrator"
+    )
+    await emloyee_change_role_success(callback, state)
+
+
+@sup_admin_router.callback_query(F.data == "setEmployeeRole")
+async def set_admin_role(callback: types.CallbackQuery, state: FSMContext):
+    await callback.answer()
+    await state.update_data(
+        role_change_msg="Employee"
+    )
+    await emloyee_change_role_success(callback, state)
+
+
+async def emloyee_change_role_success(callback: types.CallbackQuery, state: FSMContext):
+    await state.set_state(UserManagState.employee_change_role_success)
+
+    data = await state.get_data()
+    fio = data.get('fio_change_msg')
+    role = data.get('role_change_msg')
+
+    await callback.message.answer(
+        text=f"Вы собираетесь изменить роль пользователя <i>{fio}</i> на <i>{role}</i>\nВсё верно?",
+        parse_mode='HTML',
+        reply_markup=make_row_keyboard_mutiple([
+            ["✅ Подтвердить", "🔄 Изменить"],
+            ["❌ Отмена"]]
+        )
+    )
+
+
+
+@sup_admin_router.message(UserManagState.employee_change_role_success, F.text.lower() == "✅ подтвердить")
+async def emloyee_change_role_success_change(message: Message, state: FSMContext):
+    data = await state.get_data()
+    fio = data.get('fio_change_msg')
+    role = data.get('role_change_msg')
+    tg_id = await get_user_tg_id_from_db(fio)
+
+    message_ids_to_delete = [message.message_id - i for i in range(5)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
+    result = await update_position_id(tg_id, role)
+    text = f"Роль пользователя <i>{fio}</i> успешно изменена на <i>{role}</i>." if result else f"Не удалось изменить роль пользователя <i>{fio}</i>."
+
+    await message.answer(
+        text=text,
+        parse_mode='HTML',
+        reply_markup=sup_admin_keyboard()
+    )
+
+    await state.set_state(ActionState.start_state)
+    await start_message_main(message, state)
+
+
+@sup_admin_router.message(UserManagState.employee_change_role_success, F.text.lower() == "🔄 изменить")
+async def information_message_re_enter(message: Message, state: FSMContext):
+    await emloyee_role_change(message, state)
+
+
 # @sup_admin_router.message(UserManagState.employee_change_role, F.text)
 # async def emloyee_role_change_entry(message: Message, state: FSMContext):
 #     await state.update_data(
@@ -257,8 +361,9 @@ async def emloyees_block_success(message: Message, state: FSMContext):
             reply_markup=sup_admin_keyboard(),
             parse_mode='HTML'
         )
-    await state.clear()
+
     await state.set_state(ActionState.start_state)
+    await start_message_main(message, state)
 
 
 # Обработка нажатия "Разблокировать"
@@ -328,8 +433,9 @@ async def emloyees_unlock_success(message: Message, state: FSMContext):
             reply_markup=sup_admin_keyboard(),
             parse_mode='HTML'
         )
-    await state.clear()
+
     await state.set_state(ActionState.start_state)
+    await start_message_main(message, state)
 
 
 # Обработка нажатия "Пользователи"

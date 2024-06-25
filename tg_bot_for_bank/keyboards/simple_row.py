@@ -11,6 +11,14 @@ def sup_admin_keyboard():
     return markup
 
 
+def employee_keyboard():
+    first_button = [
+        [KeyboardButton(text=("🔍 Поиск по Базе Знаний"))],
+        [KeyboardButton(text=("📜 История оповещений"))]
+    ]
+    markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
+    return markup
+
 def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     """
     Создаёт реплай-клавиатуру с кнопками в один ряд
