@@ -1,13 +1,14 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 
 from config_reader import config
 from tg_bot_for_bank.filters.chat_action_middleware import ChatActionMiddleware
 from tg_bot_for_bank.filters.role_filter import RoleFilter
+from tg_bot_for_bank.handlers.admin import admin_router
 from tg_bot_for_bank.handlers.auth_user import auth_router
 from tg_bot_for_bank.handlers.common import common_router
 from tg_bot_for_bank.handlers.employee import employee_router
@@ -25,16 +26,17 @@ async def main():
 
     dp.startup.register(set_main_menu)
 
-    #dp.callback_query.outer_middleware(ChatActionMiddleware())
     employee_router.message.middleware(ChatActionMiddleware())
 
     dp.include_router(common_router)
     dp.include_router(auth_router)
     dp.include_router(employee_router)
+    dp.include_router(admin_router)
     dp.include_router(sup_admin_router)
 
     auth_router.message.filter(RoleFilter(role='Guest'))
     employee_router.message.filter(RoleFilter(role='Employee'))
+    admin_router.message.filter(RoleFilter(role='Administrator'))
     sup_admin_router.message.filter(RoleFilter(role='Super-Administrator'))
 
     await bot.delete_webhook(drop_pending_updates=True)

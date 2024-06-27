@@ -3,9 +3,19 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 
 def sup_admin_keyboard():
     first_button = [
-        [KeyboardButton(text=("👥 Управление пользователями"))],
-        [KeyboardButton(text=("📥 Запросы"))],
-        [KeyboardButton(text=("📢 Информирование"))]
+        [KeyboardButton(text="👥 Управление пользователями")],
+        [KeyboardButton(text="📥 Запросы")],
+        [KeyboardButton(text="📢 Информирование")],
+        [KeyboardButton(text="🔍 Поиск по Базе Знаний")]
+    ]
+    markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
+    return markup
+
+
+def admin_keyboard():
+    first_button = [
+        [KeyboardButton(text="📢 Информирование")],
+        [KeyboardButton(text="🔍 Поиск по Базе Знаний")],
     ]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
     return markup
@@ -13,11 +23,12 @@ def sup_admin_keyboard():
 
 def employee_keyboard():
     first_button = [
-        [KeyboardButton(text=("🔍 Поиск по Базе Знаний"))],
-        [KeyboardButton(text=("📜 История оповещений"))]
+        [KeyboardButton(text="🔍 Поиск по Базе Знаний")],
+        # [KeyboardButton(text=("📜 История оповещений"))]
     ]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
     return markup
+
 
 def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     """
@@ -48,7 +59,7 @@ def make_row_keyboard_mutiple(items: list[list[str]]) -> ReplyKeyboardMarkup:
 
 
 async def contact_keyboard():
-    first_button = [[KeyboardButton(text=("📱 Отправить"), request_contact=True)]]
+    first_button = [[KeyboardButton(text="📱 Отправить", request_contact=True)]]
     markup = ReplyKeyboardMarkup(keyboard=first_button, resize_keyboard=True)
     return markup
 
@@ -87,4 +98,3 @@ def make_row_inline_keyboard_mutiple(items: list[list[dict]]) -> InlineKeyboardM
         for row in items
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
-
