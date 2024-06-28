@@ -6,8 +6,11 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_list_from_db, \
     get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee, get_user_tg_id_from_db
+from tg_bot_for_bank.handlers.common import start_message_main_sup_admin
 from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
     make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
+from tg_bot_for_bank.services.base_search_handlers import base_search_entr_handler, \
+    base_search_entr_callback_right_handler, base_search_entr_callback_left_handler
 from tg_bot_for_bank.services.message_deleter import delete_messages
 from tg_bot_for_bank.services.sender import send_to
 
@@ -22,6 +25,14 @@ class ActionState(StatesGroup):
     inf_msg_entr = State()
     inf_msg_success = State()
 
+    search_state = State()
+    search_entr_state = State()
+    search_right_state = State()
+    search_right_old_state = State()
+    search_left_state = State()
+    search_left_old_state = State()
+
+
 class UserManagState(StatesGroup):
     user_manag = State()
     employee_block = State()
@@ -31,16 +42,47 @@ class UserManagState(StatesGroup):
     employee_change_role = State()
     employee_change_role_success = State()
 
+
 @sup_admin_router.message(ActionState.start_state)
 async def start_message_main(message: Message, state: FSMContext):
+    await start_message_main_sup_admin(message, state)
+
+# Обработка кнопки "Поиск по Базе Знаний"
+@sup_admin_router.message(F.text.lower() == "🔍 поиск по базе знаний")
+async def base_search(message: Message, state: FSMContext):
     await state.clear()
+
+    await state.set_state(ActionState.search_state)
+
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
+
     await message.answer(
-        text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
-        parse_mode='HTML',
-        reply_markup=sup_admin_keyboard()
+        text="Введите запрос для поиска в Базе Знаний 👇",
+        reply_markup=make_row_keyboard(["❌ Отмена"])
     )
 
 
+@sup_admin_router.message(
+    F.text,
+    ActionState.search_state,
+    flags={"long_operation": "typing"}
+)
+async def admin_base_search_entr(message: Message, state: FSMContext):
+    await base_search_entr_handler(message, state, ActionState, start_message_main)
+
+
+@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith(('getRightResults_')))
+async def admin_base_search_entr_callback_right(callback: types.CallbackQuery, state: FSMContext):
+    await base_search_entr_callback_right_handler(callback, state, ActionState, start_message_main)
+
+
+@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith(('getLeftResults_')))
+async def admin_base_search_entr_callback_left(callback: types.CallbackQuery, state: FSMContext):
+    await base_search_entr_callback_left_handler(callback, state, ActionState, start_message_main)
+
+
+# Нажатие "Запросы"
 @sup_admin_router.message(F.text.lower() == "запросы")
 async def emlist2(message: Message, state: FSMContext):
     message_ids_to_delete = [message.message_id - i for i in range(1, 2)]
@@ -121,7 +163,7 @@ async def employees_buttons(message: Message, state: FSMContext):
         reply_markup=sup_admin_keyboard()
     )
 
-
+# Нажатие Информирование
 @sup_admin_router.message(ActionState.inf_msg_entr, F.text)
 async def information_message_entry(message: Message, state: FSMContext):
     await state.update_data(

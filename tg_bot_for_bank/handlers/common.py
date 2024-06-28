@@ -1,18 +1,11 @@
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import Command
-from aiogram.filters import StateFilter
 
-from tg_bot_for_bank.db.database_handler import add_user, get_user_role_from_db
-from tg_bot_for_bank.filters.name_filter import IsFIO
+from tg_bot_for_bank.db.database_handler import get_user_role_from_db
 from tg_bot_for_bank.filters.user_exists_filter import UserExist
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
-from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard, sup_admin_keyboard, \
-    employee_keyboard, admin_keyboard
-from tg_bot_for_bank.services.message_deleter import delete_messages
-from tg_bot_for_bank.services.sender import send_to_admin
-from tg_bot_for_bank.qr.conversion import convert_filename_to_name
+from tg_bot_for_bank.keyboards.simple_row import sup_admin_keyboard, employee_keyboard, admin_keyboard
 from tg_bot_for_bank.handlers.auth_user import cmd_start as auth_user_start
 
 common_router = Router()
@@ -40,3 +33,27 @@ async def cmd_start(message: Message, state: FSMContext):
         await message.answer("Выберите действие 👇",
                              reply_markup=keyboard,
                              disable_notification=True)
+
+
+async def start_message_main_employee(message: Message):
+    await message.answer(
+        text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
+        parse_mode='HTML',
+        reply_markup=employee_keyboard()
+    )
+
+async def start_message_main_admin(message: Message):
+    await message.answer(
+        text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
+        parse_mode='HTML',
+        reply_markup=admin_keyboard()
+    )
+
+
+async def start_message_main_sup_admin(message: Message, state: FSMContext):
+    await state.clear()
+    await message.answer(
+        text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
+        parse_mode='HTML',
+        reply_markup=sup_admin_keyboard()
+    )
