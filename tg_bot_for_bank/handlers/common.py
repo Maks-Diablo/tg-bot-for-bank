@@ -50,8 +50,8 @@ async def start_message_main_admin(message: Message):
     )
 
 
-async def start_message_main_sup_admin(message: Message, state: FSMContext):
-    await state.clear()
+async def start_message_main_sup_admin(message: Message):
+    #await state.clear()
     await message.answer(
         text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
         parse_mode='HTML',

@@ -55,7 +55,7 @@ async def base_search_entr_handler(message: Message, state: FSMContext, ActionSt
                   'callback_data': f"getRightResults_{query}_{results_page}_{results_page_max}_{message_id_list}"}]
             ]
 
-            if current_state != ActionState.search_right_state and current_state != ActionState.search_left_state and current_state != ActionState.search_left_old_state:
+            if current_state != ActionState.search_right_state and current_state != ActionState.search_left_state and current_state != ActionState.search_left_old_state and current_state != ActionState.search_right_old_state:
                 await message.answer(
                     text=f"Результат поиска по запросу <b>{query}</b>:\n\n{result_query[results_page]}",
                     parse_mode='HTML',
@@ -109,6 +109,7 @@ async def base_search_entr_callback_right_handler(callback: types.CallbackQuery,
         await state.set_state(ActionState.search_right_old_state)
 
         await base_search_entr_handler(callback.message, state, ActionState, start_message_main)
+
 
 async def base_search_entr_callback_left_handler(callback: types.CallbackQuery, state: FSMContext, ActionState, start_message_main):
     action, query_callback, page, page_max, m_id = callback.data.split('_')

@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 
 def sup_admin_keyboard():
@@ -38,6 +39,25 @@ def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     """
     row = [KeyboardButton(text=item) for item in items]
     return ReplyKeyboardMarkup(keyboard=[row], resize_keyboard=True)
+
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
+def make_row_keyboard_mutiple_2(items: list[list[str]]) -> ReplyKeyboardMarkup:
+    """
+    Создаёт реплай-клавиатуру с кнопками в один ряд
+    :param items: список текстов для кнопок
+    :return: объект реплай-клавиатуры
+    """
+    keyboard = [
+        [
+            KeyboardButton(
+                text=item,
+            )
+            for item in row
+        ]
+        for row in items
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
 
 def make_row_keyboard_mutiple(items: list[list[str]]) -> ReplyKeyboardMarkup:

@@ -11,7 +11,9 @@ from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_
     make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
 from tg_bot_for_bank.services.base_search_handlers import base_search_entr_handler, \
     base_search_entr_callback_right_handler, base_search_entr_callback_left_handler
-from tg_bot_for_bank.services.message_deleter import delete_messages
+from tg_bot_for_bank.services.information_handlers import information_message_admin, information_message_entry, \
+    information_message_success
+from tg_bot_for_bank.services.message_deleter import delete_messages, bot
 from tg_bot_for_bank.services.sender import send_to
 
 sup_admin_router = Router()
@@ -44,8 +46,8 @@ class UserManagState(StatesGroup):
 
 
 @sup_admin_router.message(ActionState.start_state)
-async def start_message_main(message: Message, state: FSMContext):
-    await start_message_main_sup_admin(message, state)
+async def start_message_main(message: Message):
+    await start_message_main_sup_admin(message)
 
 # Обработка кнопки "Поиск по Базе Знаний"
 @sup_admin_router.message(F.text.lower() == "🔍 поиск по базе знаний")
@@ -88,18 +90,6 @@ async def emlist2(message: Message, state: FSMContext):
     message_ids_to_delete = [message.message_id - i for i in range(1, 2)]
     await delete_messages(message.chat.id, message_ids_to_delete)
 
-
-@sup_admin_router.message(F.text.lower() == "📢 информирование")
-async def information_message(message: Message, state: FSMContext):
-    await state.set_state(ActionState.inf_msg_entr)
-
-    message_ids_to_delete = [message.message_id - i for i in range(2)]
-    await delete_messages(message.chat.id, message_ids_to_delete)
-
-    await message.answer(
-        text="Введите сообщение для отправки сотрудникам 👇",
-        reply_markup=make_row_keyboard(["❌ Отмена"])
-    )
 
 @sup_admin_router.message(
     F.text.lower().startswith("❌ отмена"),
@@ -146,6 +136,10 @@ async def employees_buttons_manage(message: Message, state: FSMContext):
     F.text.lower() == "❌ отмена",
     ActionState.inf_msg_entr
 )
+@sup_admin_router.message(
+    F.text.lower() == "❌ отмена",
+    ActionState.inf_msg_success
+)
 @sup_admin_router.message(F.text.lower() == "🔙 назад")
 async def employees_buttons(message: Message, state: FSMContext):
     if ActionState.employee_list_state or ActionState.admin_list_state:
@@ -163,51 +157,22 @@ async def employees_buttons(message: Message, state: FSMContext):
         reply_markup=sup_admin_keyboard()
     )
 
+
 # Нажатие Информирование
+@sup_admin_router.message(F.text.lower() == "📢 информирование")
+async def information_message(message: Message, state: FSMContext):
+    await information_message_admin(message, state, ActionState)
+
+
 @sup_admin_router.message(ActionState.inf_msg_entr, F.text)
-async def information_message_entry(message: Message, state: FSMContext):
-    await state.update_data(
-        inf_msg=message.text
-    )
-
-    data = await state.get_data()
-    inf_msg = data.get('inf_msg')
-
-    message_ids_to_delete = [message.message_id - i for i in range(2)]
-    await delete_messages(message.chat.id, message_ids_to_delete)
-
-    await message.answer(
-        text=f"Вы собираетесь отправить сообщение:\n\n<i>{inf_msg}</i>\n\nВсё верно?",
-        parse_mode='HTML',
-        reply_markup=make_row_keyboard_mutiple([
-            ["✅ Подтвердить", "🔄 Изменить"],
-            ["❌ Отмена"]]
-        )
-    )
-
-    await state.set_state(ActionState.inf_msg_success)
+async def sup_admin_information_message_entry(message: Message, state: FSMContext):
+    await information_message_entry(message, state, ActionState)
 
 
 @sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "✅ подтвердить")
-async def information_message_success(message: Message, state: FSMContext):
-    data = await state.get_data()
-    inf_msg = data.get('inf_msg')
+async def sup_admin_information_message_success(message: Message, state: FSMContext):
+    await information_message_success(message, state, ActionState)
 
-    message_ids_to_delete = [message.message_id - i for i in range(2)]
-    await delete_messages(message.chat.id, message_ids_to_delete)
-
-    await message.answer(
-        text="Сообщение отправлено.",
-        reply_markup=sup_admin_keyboard()
-    )
-
-    employees = await get_all_employees_from_db()
-
-    for employee in employees:
-        await send_to(employee.tg_id, inf_msg)
-
-    await state.set_state(ActionState.start_state)
-    await start_message_main(message, state)
 
 @sup_admin_router.message(ActionState.inf_msg_success, F.text.lower() == "🔄 изменить")
 async def information_message_re_enter(message: Message, state: FSMContext):
@@ -483,8 +448,8 @@ async def emloyees_unlock_success(message: Message, state: FSMContext):
 # Обработка нажатия "Пользователи"
 @sup_admin_router.callback_query(F.data == "getLeftAdminList")
 async def admin_list_callback_Left(callback: types.CallbackQuery, state: FSMContext):
-    message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
-    await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('admin_list_page') - 1
@@ -497,8 +462,8 @@ async def admin_list_callback_Left(callback: types.CallbackQuery, state: FSMCont
 
 @sup_admin_router.callback_query(F.data == "getRightAdminList")
 async def admin_list_callback_Right(callback: types.CallbackQuery, state: FSMContext):
-    message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
-    await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('admin_list_page') + 1
@@ -511,8 +476,8 @@ async def admin_list_callback_Right(callback: types.CallbackQuery, state: FSMCon
 
 @sup_admin_router.callback_query(F.data == "getLeftEmployeeList")
 async def emloyees_list_callback_Left(callback: types.CallbackQuery, state: FSMContext):
-    message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
-    await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('list_page') - 1
@@ -525,8 +490,8 @@ async def emloyees_list_callback_Left(callback: types.CallbackQuery, state: FSMC
 
 @sup_admin_router.callback_query(F.data == "getRightEmployeeList")
 async def emloyees_list_callback_Right(callback: types.CallbackQuery, state: FSMContext):
-    message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
-    await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('list_page') + 1
@@ -542,8 +507,8 @@ async def emloyees_list_callback(callback: types.CallbackQuery, state: FSMContex
     await state.set_state(ActionState.employee_list_state)
     employees_arr = await get_all_employees_list_from_db(["Administrator", "Employee"])
 
-    message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
-    await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     if len(employees_arr) > 1:
         keyboard_items = [
@@ -558,25 +523,46 @@ async def emloyees_list_callback(callback: types.CallbackQuery, state: FSMContex
         data = await state.get_data()
         list_page = data.get('list_page')
 
-        await callback.message.answer(
+        # if list_page == 0:
+        #     await callback.message.answer(
+        #         text="<b>Список сотрудников:</b>\n"
+        #              f"{employees_arr[list_page]}",
+        #         parse_mode='HTML',
+        #         disable_web_page_preview=True,
+        #         reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
+        #     )
+        # else:
+        await bot.edit_message_text(
             text="<b>Список сотрудников:</b>\n"
                  f"{employees_arr[list_page]}",
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
             parse_mode='HTML',
             disable_web_page_preview=True,
             reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
         )
+
     else:
         keyboard_items = [
             {'text': 'Администраторы 🤖',
              'callback_data': "getAdminList"},
         ]
 
-        await callback.message.answer(
+        # await callback.message.answer(
+        #     text="<b>Список сотрудников:</b>\n"
+        #          f"{employees_arr[0]}",
+        #     parse_mode='HTML',
+        #     disable_web_page_preview=True,
+        #     reply_markup=make_row_inline_keyboard(keyboard_items),
+        # )
+        await bot.edit_message_text(
             text="<b>Список сотрудников:</b>\n"
                  f"{employees_arr[0]}",
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard(keyboard_items),
+            reply_markup=make_row_inline_keyboard(keyboard_items)
         )
 
 
@@ -639,8 +625,8 @@ async def admin_list_callback(callback: types.CallbackQuery, state: FSMContext):
 
     await state.update_data(admins_list_page_max=len(admins_arr) - 1)
 
-    message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
-    await delete_messages(callback.message.chat.id, message_ids_to_delete)
+   # message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
+    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     if len(admins_arr) > 1:
         keyboard_items = [
@@ -656,26 +642,42 @@ async def admin_list_callback(callback: types.CallbackQuery, state: FSMContext):
         list_page = data.get('admins_list_page')
         await state.update_data(admins_list_page=list_page)
 
-        await callback.message.answer(
+        # await callback.message.answer(
+        #     text="<b>Список администраторов:</b>\n"
+        #          f"{admins_arr[list_page]}",
+        #     parse_mode='HTML',
+        #     disable_web_page_preview=True,
+        #     reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
+        # )
+        await bot.edit_message_text(
             text="<b>Список администраторов:</b>\n"
                  f"{admins_arr[list_page]}",
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard_mutiple(keyboard_items)
-        )
+            reply_markup=make_row_inline_keyboard_mutiple(keyboard_items))
     else:
         keyboard_items = [
             {'text': 'Сотрудники 👨‍💼',
              'callback_data': "getEmployeesList"},
         ]
 
-        await callback.message.answer(
+        # await callback.message.answer(
+        #     text="<b>Список администраторов:</b>\n"
+        #          f"{admins_arr[0]}",
+        #     parse_mode='HTML',
+        #     disable_web_page_preview=True,
+        #     reply_markup=make_row_inline_keyboard(keyboard_items),
+        # )
+        await bot.edit_message_text(
             text="<b>Список администраторов:</b>\n"
                  f"{admins_arr[0]}",
+            chat_id=callback.message.chat.id,
+            message_id=callback.message.message_id,
             parse_mode='HTML',
             disable_web_page_preview=True,
-            reply_markup=make_row_inline_keyboard(keyboard_items),
-        )
+            reply_markup=make_row_inline_keyboard(keyboard_items))
 
 
 # Ответ на запрос на авторизацию
