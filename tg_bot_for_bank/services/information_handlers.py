@@ -63,4 +63,4 @@ async def information_message_success(message: Message, state: FSMContext, Actio
         await send_to(employee.tg_id, inf_msg)
 
     await state.set_state(ActionState.start_state)
-    await start_message_main_sup_admin(message, state)
+    await start_message_main_sup_admin(message)

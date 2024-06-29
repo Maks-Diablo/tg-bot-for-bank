@@ -6,7 +6,7 @@ from aiogram.types import Message, ReplyKeyboardRemove
 
 from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_list_from_db, \
     get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee, get_user_tg_id_from_db
-from tg_bot_for_bank.handlers.common import start_message_main_sup_admin
+from tg_bot_for_bank.handlers.common import start_message_main_sup_admin, handle_unhandled_message
 from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
     make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
 from tg_bot_for_bank.services.base_search_handlers import base_search_entr_handler, \
@@ -723,3 +723,9 @@ async def cmd_cancel(message: Message, state: FSMContext):
     #         text="Нечего отменять",
     #     )
     pass
+
+
+# Обработчик необработанных сообщений
+@sup_admin_router.message()
+async def admin_handle_unhandled_message(message: types.Message):
+    await handle_unhandled_message(message)

@@ -3,7 +3,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
 
-from tg_bot_for_bank.handlers.common import start_message_main_admin
+from tg_bot_for_bank.handlers.common import start_message_main_admin, handle_unhandled_message
 from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard
 from tg_bot_for_bank.services.base_search_handlers import base_search_entr_handler, \
     base_search_entr_callback_right_handler, base_search_entr_callback_left_handler
@@ -103,3 +103,8 @@ async def admin_base_search_entr_callback_right(callback: types.CallbackQuery, s
 @admin_router.callback_query(lambda c: c.data and c.data.startswith(('getLeftResults_')))
 async def admin_base_search_entr_callback_left(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_left_handler(callback, state, ActionState, start_message_main)
+
+# Обработчик необработанных сообщений
+@admin_router.message()
+async def admin_handle_unhandled_message(message: types.Message):
+    await handle_unhandled_message(message)

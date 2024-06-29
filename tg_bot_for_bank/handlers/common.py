@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 from tg_bot_for_bank.keyboards.simple_row import sup_admin_keyboard, employee_keyboard, admin_keyboard
 from tg_bot_for_bank.handlers.auth_user import cmd_start as auth_user_start
+from tg_bot_for_bank.services.message_deleter import delete_messages
 
 common_router = Router()
 
@@ -34,6 +35,9 @@ async def cmd_start(message: Message, state: FSMContext):
                              reply_markup=keyboard,
                              disable_notification=True)
 
+async def handle_unhandled_message(message: Message):
+    message_ids_to_delete = [message.message_id - i for i in range(1)]
+    await delete_messages(message.chat.id, message_ids_to_delete)
 
 async def start_message_main_employee(message: Message):
     await message.answer(
