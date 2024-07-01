@@ -135,9 +135,6 @@ async def name_entry_success(message: Message, state: FSMContext):
         reply_markup=ReplyKeyboardRemove()
     )
 
-    await state.update_data(
-        msg_id=message.message_id
-    )
     user_data = await state.get_data()
 
     # создание записи в бд

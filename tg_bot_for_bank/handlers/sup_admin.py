@@ -91,18 +91,60 @@ async def admin_base_search_entr_callback_left(callback: types.CallbackQuery, st
 async def old_requests(message: Message, state: FSMContext):
     await state.clear()
 
-    await state.set_state(ActionState.requests_state)
-
-    message_ids_to_delete = [message.message_id - i for i in range(1)]
+    message_ids_to_delete = [message.message_id - i for i in range(2)]
     await delete_messages(message.chat.id, message_ids_to_delete)
 
     requests_msg_ids = await get_old_requests_from_db()
 
-    for msg_id in requests_msg_ids:
-        try:
-            await bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=msg_id)
-        except Exception as e:
-            print(f"Не удалось переслать сообщение {msg_id}: {e}")
+    for user_id, msg_id, msg_c_id in requests_msg_ids:
+        keyboard_items = [
+            {'text': 'Принять',
+             'callback_data': f"accept_{user_id}"},
+            {'text': 'Отказать',
+             'callback_data': f"reject_{user_id}"},
+        ]
+        print(user_id)
+        lastname, firstname, patronymic = await get_user_FIO_from_db(user_id)
+
+        message_text = (
+            "Новый запрос на авторизацию:\n"
+            f"<b>{lastname} {firstname} {patronymic}</b>"
+        )
+        message = await bot.send_message(
+            chat_id=message.chat.id,
+            parse_mode='HTML',
+            text=message_text,
+            reply_markup=make_row_inline_keyboard(keyboard_items)
+        )
+
+    await start_message_main(message)
+
+    # for user_id, msg_id, msg_c_id in requests_msg_ids:
+    #     try:
+    #         await bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=msg_id, as_copy=True)
+    #         await bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=msg_c_id, as_copy=True)
+    #     except Exception as e:
+    #         print(f"Не удалось переслать сообщение {msg_id}: {e}")
+    #
+    #         keyboard_items = [
+    #             {'text': 'Принять',
+    #              'callback_data': f"accept_{user_id}"},
+    #             {'text': 'Отказать',
+    #              'callback_data': f"reject_{user_id}"},
+    #         ]
+    #         print(user_id)
+    #         lastname, firstname, patronymic = await get_user_FIO_from_db(user_id)
+    #
+    #         message_text = (
+    #             "Новый запрос на авторизацию:\n"
+    #             f"<b>{lastname} {firstname} {patronymic}</b>"
+    #         )
+    #         message = await bot.send_message(
+    #             chat_id=message.chat.id,
+    #             parse_mode='HTML',
+    #             text=message_text,
+    #             reply_markup=make_row_inline_keyboard(keyboard_items)
+    #         )
 
 
 @sup_admin_router.message(
@@ -145,6 +187,7 @@ async def employees_buttons_manage(message: Message, state: FSMContext):
         ]
         )
     )
+
 
 
 @sup_admin_router.message(
@@ -285,7 +328,7 @@ async def emloyee_change_role_success_change(message: Message, state: FSMContext
     )
 
     await state.set_state(ActionState.start_state)
-    await start_message_main(message, state)
+    await start_message_main(message)
 
 
 @sup_admin_router.message(UserManagState.employee_change_role_success, F.text.lower() == "🔄 изменить")
@@ -385,7 +428,7 @@ async def emloyees_block_success(message: Message, state: FSMContext):
         )
 
     await state.set_state(ActionState.start_state)
-    await start_message_main(message, state)
+    await start_message_main(message)
 
 
 # Обработка нажатия "Разблокировать"
@@ -457,7 +500,7 @@ async def emloyees_unlock_success(message: Message, state: FSMContext):
         )
 
     await state.set_state(ActionState.start_state)
-    await start_message_main(message, state)
+    await start_message_main(message)
 
 
 # Обработка нажатия "Пользователи"

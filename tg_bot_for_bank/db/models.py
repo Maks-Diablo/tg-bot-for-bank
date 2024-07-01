@@ -33,4 +33,5 @@ class Employees(BaseModel):
 
 class Requests(BaseModel):
     msg_id = IntegerField()
+    msg_c_id = IntegerField()
     user_id = IntegerField()

@@ -2,6 +2,7 @@ import logging
 from aiogram import Bot
 
 from tg_bot_for_bank.config_reader import config
+from tg_bot_for_bank.db.database_handler import add_user_msg_request
 from tg_bot_for_bank.db.models import Employees
 from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard
 
@@ -22,22 +23,27 @@ async def send_to_admin(user_data: dict):
     ]
 
     try:
-        message = (
+        message_text = (
             "Новый запрос на авторизацию:\n"
             f"<b>{user_data.get('lastname')} {user_data.get('firstname')} {user_data.get('patronymic')}</b>"
         )
-        await bot.send_message(
+        message = await bot.send_message(
             chat_id=ADMIN_CHAT_ID,
             parse_mode='HTML',
-            text=message,
+            text=message_text,
         )
-        await bot.send_contact(
+        c_message = await bot.send_contact(
             chat_id=ADMIN_CHAT_ID,
             first_name=user_data.get('contact').first_name,
             phone_number=user_data.get('contact').phone_number,
             reply_markup=make_row_inline_keyboard(keyboard_items),
             disable_notification=True
         )
+
+        msg_id = message.message_id
+        msg_c_id = c_message.message_id
+        tg_id = user_data.get('tg_id')
+        await add_user_msg_request(tg_id, msg_id, msg_c_id)
 
         logger.info("Сообщение отправлено администратору.")
     except Exception as e:

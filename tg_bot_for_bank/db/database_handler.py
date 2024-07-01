@@ -12,12 +12,12 @@ async def get_old_requests_from_db():
     try:
         # Handle the case where no requests are found
         query = (Requests
-                 .select(Requests.msg_id)
+                 .select()
                  .join(Employees, on=(Requests.user_id == Employees.tg_id))
                  .join(Positions, on=(Employees.position_id == Positions.id))
                  .where(Positions.title == 'UNKNOW'))
 
-        result = [request.msg_id for request in query]
+        result = [(request.user_id, request.msg_id, request.msg_c_id) for request in query]
         logger.info(f"Возврат пользователей.")
         return result
     except DoesNotExist:
@@ -126,18 +126,19 @@ async def add_user(user_data):
             firstname=user_data.get('firstname'),
             patronymic=user_data.get('patronymic')
         )
-        Employees.save(user)
-
         logger.info(f"Пользователь {user.tg_id} успешно добавлен.")
-
-        Requests.create(
-            msg_id=user_data.get('msg_id')+1,
-            user_id=user.id
-        )
         return user
     except IntegrityError:
         logger.error(f"Пользователь {user_data.get('tg_id')} уже существует.")
         return None
+
+
+async def add_user_msg_request(tg_id, msg_id, msg_c_id):
+    Requests.create(
+        msg_id=msg_id,
+        msg_c_id=msg_c_id,
+        user_id=tg_id
+    )
 
 
 async def update_position_id(tg_id, position_title):
