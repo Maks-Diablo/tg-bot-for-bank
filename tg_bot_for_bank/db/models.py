@@ -1,4 +1,4 @@
-from peewee import Model, PrimaryKeyField, PostgresqlDatabase, CharField, IntegerField, ForeignKeyField
+from peewee import Model, PrimaryKeyField, PostgresqlDatabase, CharField, IntegerField, BooleanField, ForeignKeyField
 
 from tg_bot_for_bank.config_reader import config
 
@@ -29,3 +29,8 @@ class Employees(BaseModel):
     lastname = CharField()
     firstname = CharField()
     patronymic = CharField()
+
+
+class Requests(BaseModel):
+    msg_id = IntegerField()
+    user_id = IntegerField()

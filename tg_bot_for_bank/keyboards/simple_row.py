@@ -1,5 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def sup_admin_keyboard():
@@ -40,7 +39,9 @@ def make_row_keyboard(items: list[str]) -> ReplyKeyboardMarkup:
     row = [KeyboardButton(text=item) for item in items]
     return ReplyKeyboardMarkup(keyboard=[row], resize_keyboard=True)
 
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+
 
 def make_row_keyboard_mutiple_2(items: list[list[str]]) -> ReplyKeyboardMarkup:
     """

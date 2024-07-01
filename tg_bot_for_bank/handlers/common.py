@@ -35,9 +35,11 @@ async def cmd_start(message: Message, state: FSMContext):
                              reply_markup=keyboard,
                              disable_notification=True)
 
+
 async def handle_unhandled_message(message: Message):
     message_ids_to_delete = [message.message_id - i for i in range(1)]
     await delete_messages(message.chat.id, message_ids_to_delete)
+
 
 async def start_message_main_employee(message: Message):
     await message.answer(
@@ -45,6 +47,7 @@ async def start_message_main_employee(message: Message):
         parse_mode='HTML',
         reply_markup=employee_keyboard()
     )
+
 
 async def start_message_main_admin(message: Message):
     await message.answer(
@@ -55,7 +58,7 @@ async def start_message_main_admin(message: Message):
 
 
 async def start_message_main_sup_admin(message: Message):
-    #await state.clear()
+    # await state.clear()
     await message.answer(
         text=f"Вы находитесь в <b>Главном меню</b>.\nВыберите действие 👇",
         parse_mode='HTML',

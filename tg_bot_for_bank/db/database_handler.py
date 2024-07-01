@@ -8,13 +8,33 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+async def get_old_requests_from_db():
+    try:
+        # Handle the case where no requests are found
+        query = (Requests
+                 .select(Requests.msg_id)
+                 .join(Employees, on=(Requests.user_id == Employees.tg_id))
+                 .join(Positions, on=(Employees.position_id == Positions.id))
+                 .where(Positions.title == 'UNKNOW'))
+
+        result = [request.msg_id for request in query]
+        logger.info(f"Возврат пользователей.")
+        return result
+    except DoesNotExist:
+        logger.error(f"Ошибка возврата пользователей.")
+        return None
+
+
 async def un_block_empolyee(FIO, type):
     FIO = FIO.split()
-    if type == 'block': position = 6
-    else: position = 3
+    if type == 'block':
+        position = 6
+    else:
+        position = 3
     try:
         try:
-            employee = Employees.get(Employees.lastname == FIO[0], Employees.firstname == FIO[1], Employees.patronymic == FIO[2])
+            employee = Employees.get(Employees.lastname == FIO[0], Employees.firstname == FIO[1],
+                                     Employees.patronymic == FIO[2])
             employee.position_id = position
             employee.save()
 
@@ -26,6 +46,7 @@ async def un_block_empolyee(FIO, type):
     except Exception as ex:
         logger.error(f"Ошибка при разблокировании\блокировании пользователя {FIO}: {ex}")
         return False
+
 
 async def get_all_employees_from_db():
     try:
@@ -67,7 +88,8 @@ async def get_all_employees_list_from_db(positions):
 async def get_user_tg_id_from_db(fio: str):
     fio = fio.split()
     try:
-        employee = Employees.get(Employees.firstname == fio[1], Employees.lastname == fio[0], Employees.patronymic == fio[2])
+        employee = Employees.get(Employees.firstname == fio[1], Employees.lastname == fio[0],
+                                 Employees.patronymic == fio[2])
         tg_id = employee.tg_id
         return tg_id
     except DoesNotExist:
@@ -104,7 +126,14 @@ async def add_user(user_data):
             firstname=user_data.get('firstname'),
             patronymic=user_data.get('patronymic')
         )
+        Employees.save(user)
+
         logger.info(f"Пользователь {user.tg_id} успешно добавлен.")
+
+        Requests.create(
+            msg_id=user_data.get('msg_id')+1,
+            user_id=user.id
+        )
         return user
     except IntegrityError:
         logger.error(f"Пользователь {user_data.get('tg_id')} уже существует.")

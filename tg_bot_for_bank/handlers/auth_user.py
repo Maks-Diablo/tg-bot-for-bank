@@ -4,12 +4,10 @@ from aiogram.filters import StateFilter
 
 from tg_bot_for_bank.db.database_handler import add_user
 from tg_bot_for_bank.filters.name_filter import IsFIO
-from tg_bot_for_bank.filters.user_exists_filter import UserExist
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard, contact_keyboard
-from tg_bot_for_bank.services.message_deleter import delete_messages
 from tg_bot_for_bank.services.sender import send_to_admin
 from tg_bot_for_bank.qr.conversion import convert_filename_to_name
 
@@ -21,6 +19,7 @@ class EntryState(StatesGroup):
     name_entry = State()
     name_entry_2 = State()
     name_success = State()
+
 
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
@@ -112,7 +111,7 @@ async def name_entry_2(message: Message, state: FSMContext):
     user_data = await state.get_data()
     update_data = {
         'tg_id': message.from_user.id,
-        'tg_username':  message.from_user.username,
+        'tg_username': message.from_user.username,
         'lastname': name[0],
         'firstname': name[1],
         'patronymic': name[2]
@@ -136,7 +135,11 @@ async def name_entry_success(message: Message, state: FSMContext):
         reply_markup=ReplyKeyboardRemove()
     )
 
+    await state.update_data(
+        msg_id=message.message_id
+    )
     user_data = await state.get_data()
+
     # создание записи в бд
     await add_user(user_data)
     # отправка данных
@@ -176,6 +179,7 @@ async def cmd_cancel(message: Message, state: FSMContext):
         await message.answer(
             text="Нечего отменять",
         )
+
 
 @auth_router.message(StateFilter("EntryState:name_entry", "EntryState:name_entry_2"))
 async def name_entry_incorrectly(message: Message):

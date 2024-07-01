@@ -1,19 +1,16 @@
-import asyncio
-
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message
-from aiogram.utils.chat_action import ChatActionSender
 
 from tg_bot_for_bank.handlers.common import start_message_main_employee, handle_unhandled_message
-from tg_bot_for_bank.keyboards.simple_row import employee_keyboard, make_row_keyboard, make_row_inline_keyboard_mutiple
+from tg_bot_for_bank.keyboards.simple_row import make_row_keyboard
 from tg_bot_for_bank.services.base_search_handlers import base_search_entr_handler, \
     base_search_entr_callback_right_handler, base_search_entr_callback_left_handler
-from tg_bot_for_bank.services.message_deleter import delete_messages, bot
-from tg_bot_for_bank.services.search_parser import search_belarusbank
+from tg_bot_for_bank.services.message_deleter import delete_messages
 
 employee_router = Router()
+
 
 class ActionState(StatesGroup):
     start_state = State()
@@ -46,6 +43,7 @@ async def base_search(message: Message, state: FSMContext):
         reply_markup=make_row_keyboard(["❌ Отмена"])
     )
 
+
 @employee_router.message(
     F.text.lower() == "❌ отмена",
     ActionState.search_state
@@ -65,11 +63,13 @@ async def cancle_buttons(message: Message, state: FSMContext):
 async def employee_base_search_entr(message: Message, state: FSMContext):
     await base_search_entr_handler(message, state, ActionState, start_message_main)
 
-@employee_router.callback_query(lambda c: c.data and c.data.startswith(('getRightResults_')))
+
+@employee_router.callback_query(lambda c: c.data and c.data.startswith('getRightResults_'))
 async def employee_base_search_entr_callback_right(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_right_handler(callback, state, ActionState, start_message_main)
 
-@employee_router.callback_query(lambda c: c.data and c.data.startswith(('getLeftResults_')))
+
+@employee_router.callback_query(lambda c: c.data and c.data.startswith('getLeftResults_'))
 async def employee_base_search_entr_callback_left(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_left_handler(callback, state, ActionState, start_message_main)
 

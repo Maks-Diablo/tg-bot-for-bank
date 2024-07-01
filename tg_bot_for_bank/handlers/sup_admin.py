@@ -2,10 +2,10 @@ from aiogram import F, Router, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message
 
 from tg_bot_for_bank.db.database_handler import update_position_id, get_all_employees_list_from_db, \
-    get_user_FIO_from_db, get_all_employees_from_db, un_block_empolyee, get_user_tg_id_from_db
+    get_user_FIO_from_db, un_block_empolyee, get_user_tg_id_from_db, get_old_requests_from_db
 from tg_bot_for_bank.handlers.common import start_message_main_sup_admin, handle_unhandled_message
 from tg_bot_for_bank.keyboards.simple_row import make_row_inline_keyboard, make_row_inline_keyboard_mutiple, \
     make_row_keyboard, sup_admin_keyboard, make_row_keyboard_mutiple
@@ -34,6 +34,7 @@ class ActionState(StatesGroup):
     search_left_state = State()
     search_left_old_state = State()
 
+    requests_state = State()
 
 class UserManagState(StatesGroup):
     user_manag = State()
@@ -48,6 +49,7 @@ class UserManagState(StatesGroup):
 @sup_admin_router.message(ActionState.start_state)
 async def start_message_main(message: Message):
     await start_message_main_sup_admin(message)
+
 
 # Обработка кнопки "Поиск по Базе Знаний"
 @sup_admin_router.message(F.text.lower() == "🔍 поиск по базе знаний")
@@ -74,21 +76,33 @@ async def admin_base_search_entr(message: Message, state: FSMContext):
     await base_search_entr_handler(message, state, ActionState, start_message_main)
 
 
-@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith(('getRightResults_')))
+@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith('getRightResults_'))
 async def admin_base_search_entr_callback_right(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_right_handler(callback, state, ActionState, start_message_main)
 
 
-@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith(('getLeftResults_')))
+@sup_admin_router.callback_query(lambda c: c.data and c.data.startswith('getLeftResults_'))
 async def admin_base_search_entr_callback_left(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_left_handler(callback, state, ActionState, start_message_main)
 
 
 # Нажатие "Запросы"
-@sup_admin_router.message(F.text.lower() == "запросы")
-async def emlist2(message: Message, state: FSMContext):
-    message_ids_to_delete = [message.message_id - i for i in range(1, 2)]
+@sup_admin_router.message(F.text.lower() == "📥 запросы")
+async def old_requests(message: Message, state: FSMContext):
+    await state.clear()
+
+    await state.set_state(ActionState.requests_state)
+
+    message_ids_to_delete = [message.message_id - i for i in range(1)]
     await delete_messages(message.chat.id, message_ids_to_delete)
+
+    requests_msg_ids = await get_old_requests_from_db()
+
+    for msg_id in requests_msg_ids:
+        try:
+            await bot.forward_message(chat_id=message.chat.id, from_chat_id=message.chat.id, message_id=msg_id)
+        except Exception as e:
+            print(f"Не удалось переслать сообщение {msg_id}: {e}")
 
 
 @sup_admin_router.message(
@@ -131,6 +145,7 @@ async def employees_buttons_manage(message: Message, state: FSMContext):
         ]
         )
     )
+
 
 @sup_admin_router.message(
     F.text.lower() == "❌ отмена",
@@ -178,6 +193,7 @@ async def sup_admin_information_message_success(message: Message, state: FSMCont
 async def information_message_re_enter(message: Message, state: FSMContext):
     await information_message(message, state)
 
+
 # Обработка нажатия "Изменить роль пользователя"
 @sup_admin_router.message(
     F.text.lower() == "🎭 изменить роль пользователя",
@@ -203,9 +219,9 @@ async def emloyee_role_change_role(message: Message, state: FSMContext):
 
     keyboard_items = [
         [{'text': 'Администратор',
-         'callback_data': "setAdminRole"}],
+          'callback_data': "setAdminRole"}],
         [{'text': 'Сотрудник',
-         'callback_data': "setEmployeeRole"}],
+          'callback_data': "setEmployeeRole"}],
     ]
 
     await message.answer(
@@ -247,7 +263,6 @@ async def emloyee_change_role_success(callback: types.CallbackQuery, state: FSMC
             ["❌ Отмена"]]
         )
     )
-
 
 
 @sup_admin_router.message(UserManagState.employee_change_role_success, F.text.lower() == "✅ подтвердить")
@@ -448,8 +463,8 @@ async def emloyees_unlock_success(message: Message, state: FSMContext):
 # Обработка нажатия "Пользователи"
 @sup_admin_router.callback_query(F.data == "getLeftAdminList")
 async def admin_list_callback_Left(callback: types.CallbackQuery, state: FSMContext):
-    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
-    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    # message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    # await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('admin_list_page') - 1
@@ -462,8 +477,8 @@ async def admin_list_callback_Left(callback: types.CallbackQuery, state: FSMCont
 
 @sup_admin_router.callback_query(F.data == "getRightAdminList")
 async def admin_list_callback_Right(callback: types.CallbackQuery, state: FSMContext):
-    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
-    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    # message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    # await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('admin_list_page') + 1
@@ -476,8 +491,8 @@ async def admin_list_callback_Right(callback: types.CallbackQuery, state: FSMCon
 
 @sup_admin_router.callback_query(F.data == "getLeftEmployeeList")
 async def emloyees_list_callback_Left(callback: types.CallbackQuery, state: FSMContext):
-    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
-    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    # message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    # await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('list_page') - 1
@@ -490,8 +505,8 @@ async def emloyees_list_callback_Left(callback: types.CallbackQuery, state: FSMC
 
 @sup_admin_router.callback_query(F.data == "getRightEmployeeList")
 async def emloyees_list_callback_Right(callback: types.CallbackQuery, state: FSMContext):
-    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
-    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    # message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    # await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     data = await state.get_data()
     list_page = data.get('list_page') + 1
@@ -507,8 +522,8 @@ async def emloyees_list_callback(callback: types.CallbackQuery, state: FSMContex
     await state.set_state(ActionState.employee_list_state)
     employees_arr = await get_all_employees_list_from_db(["Administrator", "Employee"])
 
-    #message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
-    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    # message_ids_to_delete = [callback.message.message_id - i for i in range(1)]
+    # await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     if len(employees_arr) > 1:
         keyboard_items = [
@@ -625,8 +640,8 @@ async def admin_list_callback(callback: types.CallbackQuery, state: FSMContext):
 
     await state.update_data(admins_list_page_max=len(admins_arr) - 1)
 
-   # message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
-    #await delete_messages(callback.message.chat.id, message_ids_to_delete)
+    # message_ids_to_delete = [callback.message.message_id - i for i in range(2)]
+    # await delete_messages(callback.message.chat.id, message_ids_to_delete)
 
     if len(admins_arr) > 1:
         keyboard_items = [

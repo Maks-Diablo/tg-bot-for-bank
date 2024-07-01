@@ -55,6 +55,7 @@ async def information_message_cancel(message: Message, state: FSMContext):
 
     await start_message_main_admin(message)
 
+
 @admin_router.message(ActionState.inf_msg_entr, F.text)
 async def admin_information_message_entry(message: Message, state: FSMContext):
     await information_message_entry(message, state, ActionState)
@@ -95,14 +96,15 @@ async def admin_base_search_entr(message: Message, state: FSMContext):
     await base_search_entr_handler(message, state, ActionState, start_message_main)
 
 
-@admin_router.callback_query(lambda c: c.data and c.data.startswith(('getRightResults_')))
+@admin_router.callback_query(lambda c: c.data and c.data.startswith('getRightResults_'))
 async def admin_base_search_entr_callback_right(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_right_handler(callback, state, ActionState, start_message_main)
 
 
-@admin_router.callback_query(lambda c: c.data and c.data.startswith(('getLeftResults_')))
+@admin_router.callback_query(lambda c: c.data and c.data.startswith('getLeftResults_'))
 async def admin_base_search_entr_callback_left(callback: types.CallbackQuery, state: FSMContext):
     await base_search_entr_callback_left_handler(callback, state, ActionState, start_message_main)
+
 
 # Обработчик необработанных сообщений
 @admin_router.message()
