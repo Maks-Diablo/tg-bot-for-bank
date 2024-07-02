@@ -47,7 +47,8 @@ class UserManagState(StatesGroup):
 
 
 @sup_admin_router.message(ActionState.start_state)
-async def start_message_main(message: Message):
+async def start_message_main(message: Message, state: FSMContext):
+    await state.clear()
     await start_message_main_sup_admin(message)
 
 
@@ -117,7 +118,7 @@ async def old_requests(message: Message, state: FSMContext):
             reply_markup=make_row_inline_keyboard(keyboard_items)
         )
 
-    await start_message_main(message)
+    await start_message_main(message, state)
 
     # for user_id, msg_id, msg_c_id in requests_msg_ids:
     #     try:
@@ -187,7 +188,6 @@ async def employees_buttons_manage(message: Message, state: FSMContext):
         ]
         )
     )
-
 
 
 @sup_admin_router.message(
@@ -327,8 +327,8 @@ async def emloyee_change_role_success_change(message: Message, state: FSMContext
         reply_markup=sup_admin_keyboard()
     )
 
-    await state.set_state(ActionState.start_state)
-    await start_message_main(message)
+    #await state.set_state(ActionState.start_state)
+    await start_message_main(message, state)
 
 
 @sup_admin_router.message(UserManagState.employee_change_role_success, F.text.lower() == "🔄 изменить")
@@ -428,7 +428,7 @@ async def emloyees_block_success(message: Message, state: FSMContext):
         )
 
     await state.set_state(ActionState.start_state)
-    await start_message_main(message)
+    await start_message_main(message, state)
 
 
 # Обработка нажатия "Разблокировать"
@@ -500,7 +500,7 @@ async def emloyees_unlock_success(message: Message, state: FSMContext):
         )
 
     await state.set_state(ActionState.start_state)
-    await start_message_main(message)
+    await start_message_main(message, state)
 
 
 # Обработка нажатия "Пользователи"
@@ -757,6 +757,7 @@ async def process_callback(callback: types.CallbackQuery):
     elif action == 'reject':
         # Логика для отказа пользователю
         await update_position_id(tg_id, 'DEACTIVE')
+
         await send_to(tg_id, 'Администратор отказал Вам в авторизации.')
 
         message_ids_to_delete = [callback.message.message_id - i for i in range(0, 2)]

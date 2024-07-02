@@ -52,7 +52,7 @@ async def cancle_buttons(message: Message, state: FSMContext):
     message_ids_to_delete = [message.message_id - i for i in range(0, 2)]
     await delete_messages(message.chat.id, message_ids_to_delete)
 
-    await start_message_main(message, state)
+    await start_message_main(message)
 
 
 @employee_router.message(
